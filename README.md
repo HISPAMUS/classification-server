@@ -12,5 +12,6 @@ REST API offering services for these classifiers:
 
 Can be tested from *grfia* with:
 ```bash
-curl -F left=962 -F top=148 -F right=1050 -F bottom=292 -F predictions=5 deep:8888/image/1/bbox
+curl -F left=962 -F top=148 -F right=1050 -F bottom=292 -F predictions=5 deep:8888/image/symbol_test/symbol
+curl deep:8888/image/e2e_test/e2e
 ````
