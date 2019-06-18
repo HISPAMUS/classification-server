@@ -1,5 +1,7 @@
-# symbol-classification
-Isolated symbol classification with Deep Learning.
+# classification-server
+REST API offering services for these classifiers:
+- symbol classification: commit [ffef905](https://github.com/HISPAMUS/symbol-classification/commit/ffef905002a2964e6a56d7c5d6b81c43e37a3a42)
+- end-to-end recognition: commit [e18d694](https://github.com/HISPAMUS/end-to-end-recognition/commit/e18d694b3081ba5e95fdca3009b04e1a72e97795)
 
 ## Requirements
 

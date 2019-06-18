@@ -1,13 +1,13 @@
 #!/bin/bash
 
-APP=symbol-classification
+APP=classification-server
 PID=/tmp/$APP.pid
 LOG=/tmp/$APP.log
 ERROR=/tmp/$APP-error.log
 
 PORT=8888
 VENV="source /home/muret/venv-cpu/bin/activate"
-COMMAND="python /home/muret/symbol-classification/server.py -port $PORT"
+COMMAND="python /home/muret/classification-server/server.py -port $PORT"
 
 #USR=muret
 

@@ -1,16 +1,19 @@
 import argparse
 import flask
 from flask import request, jsonify
-import os
 import logging
-from symbol_classifier import SymbolClassifier
+import os
+
+from e2e_classifier import E2EClassifier
 from image_storage import ImageStorage
+from symbol_classifier import SymbolClassifier
 
 
-classifier = None
-storage = None
 app = flask.Flask(__name__)
-logger = logging.getLogger('server')
+_logger = logging.getLogger('server')
+_storage = None
+_symbol_classifier = None
+_e2e_classifier = None
 
 
 def message(text):
@@ -21,7 +24,7 @@ def message(text):
 def image_save():
     if request.files.get('image') and request.form.get('id'):
         id = request.form['id']
-        request.files['image'].save(storage.path(id))
+        request.files['image'].save(_storage.path(id))
         return message(f'Image [{id}] stored'), 200
     else:
         return message('Missing data'), 400
@@ -29,7 +32,7 @@ def image_save():
 
 @app.route('/image/<id>', methods=['GET'])
 def image_check(id):
-    if storage.exists(id):
+    if _storage.exists(id):
         return message(f'Image [{id}] exists'), 200
     else:
         return message(f'Image [{id}] does not exist'), 404
@@ -37,16 +40,16 @@ def image_check(id):
 
 @app.route('/image/<id>', methods=['DELETE'])
 def image_delete(id):
-    if storage.exists(id):
-        os.remove(storage.path(id))
+    if _storage.exists(id):
+        os.remove(_storage.path(id))
         return message(f'Image [{id}] deleted'), 200
     else:
         return message(f'Image [{id}] does not exist'), 404
 
 
-@app.route('/image/<id>/bbox', methods=['POST'])
-def predict(id):
-    if not storage.exists(id):
+@app.route('/image/<id>/symbol', methods=['POST'])
+def symbol_classify(id):
+    if not _storage.exists(id):
         return message(f'Image [{id}] does not exist'), 404
     
     try:
@@ -59,11 +62,11 @@ def predict(id):
         return message('Wrong input values'), 400
 
     try:
-        shape_image, position_image = storage.crop(id, left, top, right, bottom)
+        shape_image, position_image = _storage.crop(id, left, top, right, bottom)
     except Exception as e:
         return message('Error cropping image'), 400
 
-    shape, position = classifier.predict(shape_image, position_image, n)
+    shape, position = _symbol_classifier.predict(shape_image, position_image, n)
     if shape is None or position is None:
         return message('Error predicting symbol'), 404
     
@@ -71,23 +74,47 @@ def predict(id):
     return jsonify(result), 200
 
 
+@app.route('/image/<id>/e2e', methods=['GET'])
+def e2e_classify(id):
+    if not _storage.exists(id):
+        return message(f'Image [{id}] does not exist'), 404
+    predictions = _e2e_classifier.predict(_storage.path(id))
+    result = [{"shape": x[0].split(":")[0],
+                "position": x[0].split(":")[1],
+                "start": x[1],
+                "end": x[2]} for x in predictions]
+    return jsonify(result), 200
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
     parser = argparse.ArgumentParser(description='Mensural symbol classification (predictor on the server).')
-    parser.add_argument('-model_shape',    dest='model_shape', type=str, default='model/shape_classifier.h5')
-    parser.add_argument('-model_position', dest='model_position',    type=str, default='model/position_classifier.h5')
-    parser.add_argument('-vocabulary_shape',    dest='vocabulary_shape', type=str, default='model/shape_map.npy')
-    parser.add_argument('-vocabulary_position', dest='vocabulary_position',    type=str, default='model/position_map.npy')
+    
+    # Symbol classification
+    parser.add_argument('-sc_model_shape',    dest='sc_model_shape', type=str, default='model/symbol-classification/shape_classifier.h5')
+    parser.add_argument('-sc_model_position', dest='sc_model_position',    type=str, default='model/symbol-classification/position_classifier.h5')
+    parser.add_argument('-sc_vocabulary_shape',    dest='sc_vocabulary_shape', type=str, default='model/symbol-classification/shape_map.npy')
+    parser.add_argument('-sc_vocabulary_position', dest='sc_vocabulary_position',    type=str, default='model/symbol-classification/position_map.npy')
+
+    # End-to-end recognition
+    parser.add_argument('-e2e_model', dest='e2e_model', type=str, default='model/end-to-end/hispamus_model_175.meta')
+    parser.add_argument('-e2e_vocabulary', dest='e2e_vocabulary', type=str, default='model/end-to-end/vocabulary.npy')
+
+    # Server configuration
     parser.add_argument('-port', dest='port', type=int, default=8888)
     parser.add_argument('-image_storage', dest='image_storage', type=str, default='images')
+
     args = parser.parse_args()
 
     # Initialize image storage
-    storage = ImageStorage(args.image_storage)
+    _storage = ImageStorage(args.image_storage)
 
-    # Create classifier, which loads the models and the dictionary for the vocabularies
-    classifier = SymbolClassifier(args.model_shape, args.model_position, args.vocabulary_shape, args.vocabulary_position)
+    # Create symbol classifier, which loads the models and the dictionary for the vocabularies
+    _symbol_classifier = SymbolClassifier(args.sc_model_shape, args.sc_model_position, args.sc_vocabulary_shape, args.sc_vocabulary_position)
+
+    # Create end-to-end classifier
+    _e2e_classifier = E2EClassifier(args.e2e_model, args.e2e_vocabulary)
 
     # Start server, 0.0.0.0 allows connections from other computers
     app.run(host='0.0.0.0', port=args.port)
