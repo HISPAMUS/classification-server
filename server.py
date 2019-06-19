@@ -48,6 +48,7 @@ def image_delete(id):
 
 
 @app.route('/image/<id>/symbol', methods=['POST'])
+@app.route('/image/<id>/bbox', methods=['POST'])
 def symbol_classify(id):
     if not _storage.exists(id):
         return message(f'Image [{id}] does not exist'), 404
