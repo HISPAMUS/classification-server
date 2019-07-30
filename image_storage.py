@@ -34,6 +34,10 @@ class ImageStorage:
         file_path = Path(self.path(id))
         return file_path.is_file()
 
+    def read(self, id, left, top, right, bottom):
+        image = cv2.imread(self.path(id))
+        return image[top:bottom, left:right]
+
 
     def crop(self, id, left, top, right, bottom):
         image = cv2.imread(self.path(id))

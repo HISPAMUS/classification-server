@@ -45,7 +45,7 @@ class E2EClassifier:
     #     return strs
 
 
-    def predict(self, image_path):
+    def predict(self, image):
         config = tf.ConfigProto()
         config.gpu_options.allow_growth = True
         tf.reset_default_graph()
@@ -69,9 +69,9 @@ class E2EClassifier:
         #decoded, _ = tf.nn.ctc_greedy_decoder(logits, seq_len)
         decoded = tf.nn.softmax(logits)
 
-        original_image = cv2.imread(image_path,True)
+        #original_image = cv2.imread(image_path,True)
 
-        image = cv2.cvtColor(original_image, cv2.COLOR_BGR2GRAY) # Pre-process
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # Pre-process
         new_width = int(float(HEIGHT * image.shape[1]) / image.shape[0])
         image = cv2.resize(image, (new_width, HEIGHT))
 
@@ -95,7 +95,7 @@ class E2EClassifier:
                 pred_per_frame.append(np.argmax(v[0]))
 
         width_refactor = 1.
-        width_refactor *= original_image.shape[0]
+        width_refactor *= image.shape[0]
         width_refactor /= HEIGHT
         width_refactor *= WIDTH_REDUCTION
 

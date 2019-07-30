@@ -75,7 +75,7 @@ def symbol_classify(id):
     return jsonify(result), 200
 
 
-@app.route('/image/<id>/e2e', methods=['GET'])
+'''@app.route('/image/<id>/e2e', methods=['GET'])
 def e2e_classify(id):
     if not _storage.exists(id):
         return message(f'Image [{id}] does not exist'), 404
@@ -85,7 +85,36 @@ def e2e_classify(id):
                 "start": x[1],
                 "end": x[2]} for x in predictions]
     return jsonify(result), 200
+'''
 
+@app.route('/image/<id>/e2e', methods=['POST'])
+def e2e_classify(id):
+    if not _storage.exists(id):
+        return message(f'Image [{id}] does not exist'), 404
+        
+    # TO-DO SUBIR DAVID    
+    try:
+        left = int(request.form['left'])
+        top = int(request.form['top'])
+        right = int(request.form['right'])
+        bottom = int(request.form['bottom'])
+        n = int(request.form.get('predictions', "1"))
+    except ValueError as e:
+        return message('Wrong input values'), 400
+
+    try:
+        image = _storage.read(id, left, top, right, bottom)
+    except Exception as e:
+        return message('Error cropping image'), 400
+    # END TO-DO SUBIR DAVID    
+        
+        
+    predictions = _e2e_classifier.predict(image)
+    result = [{"shape": x[0].split(":")[0],
+                "position": x[0].split(":")[1],
+                "start": x[1],
+                "end": x[2]} for x in predictions]
+    return jsonify(result), 200
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
