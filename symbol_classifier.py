@@ -27,10 +27,10 @@ class SymbolClassifier:
         self.model_position = load_model(model_position_path)
         self.model_position._make_predict_function() # Workaround to solve multithreading issues with flask: https://github.com/keras-team/keras/issues/2397#issuecomment-306687500
 
-        shape_vocabulary = np.load(vocabulary_shape).item()  # Category -> int
+        shape_vocabulary = np.load(vocabulary_shape, allow_pickle=True).item()  # Category -> int
         self.shape_vocabulary = dict((v, k) for k, v in shape_vocabulary.items())  # int -> Category
 
-        position_vocabulary = np.load(vocabulary_position).item()  # Category -> int
+        position_vocabulary = np.load(vocabulary_position, allow_pickle=True).item()  # Category -> int
         self.position_vocabulary = dict((v, k) for k, v in position_vocabulary.items())  # int -> Category
 
         self.logger.info('Models loaded')

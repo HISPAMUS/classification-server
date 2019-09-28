@@ -3,20 +3,45 @@ import logging
 import numpy as np
 import os
 import tensorflow as tf
+import datetime
 
 __all__ = [ 'E2EClassifier' ]
 
 class E2EClassifier:
 
     logger = logging.getLogger('E2EClassifier')
+    lastUsed = datetime.datetime.now()
 
 
     def __init__(self, model_path, vocabulary_path):
         self.model_path = model_path
 
         # Read the dictionary
-        word2int = np.load(vocabulary_path).item()     # Category -> int
+        word2int = np.load(vocabulary_path, allow_pickle=True).item()     # Category -> int
         self.int2word = dict((v, k) for k, v in word2int.items())     # int -> Category
+
+        config = tf.ConfigProto()
+        config.gpu_options.allow_growth = True
+        tf.reset_default_graph()
+        self.sess = tf.InteractiveSession(config=config)
+
+        #First let's load meta graph and restore weights
+        saver = tf.train.import_meta_graph(self.model_path)
+        saver.restore(self.sess, self.model_path[:-5])
+
+        graph = tf.get_default_graph()
+        self.input = graph.get_tensor_by_name('model_input:0')
+        self.seq_len = graph.get_tensor_by_name("seq_lengths:0")
+        self.rnn_keep_prob = graph.get_tensor_by_name("keep_prob:0")
+        height_tensor = graph.get_tensor_by_name("input_height:0")
+        width_reduction_tensor = graph.get_tensor_by_name("width_reduction:0")
+        logits = tf.get_collection("logits")[0]
+
+        # Constants that are saved inside the model itself
+        self.WIDTH_REDUCTION, self.HEIGHT = self.sess.run([width_reduction_tensor, height_tensor])
+
+        #decoded, _ = tf.nn.ctc_greedy_decoder(logits, seq_len)
+        self.decoded = tf.nn.softmax(logits)
 
 
     # def sparse_tensor_to_strs(self, sparse_tensor):
@@ -46,47 +71,27 @@ class E2EClassifier:
 
 
     def predict(self, image):
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
-        tf.reset_default_graph()
-        sess = tf.InteractiveSession(config=config)
 
-        #First let's load meta graph and restore weights
-        saver = tf.train.import_meta_graph(self.model_path)
-        saver.restore(sess, self.model_path[:-5])
-
-        graph = tf.get_default_graph()
-        input = graph.get_tensor_by_name('model_input:0')
-        seq_len = graph.get_tensor_by_name("seq_lengths:0")
-        rnn_keep_prob = graph.get_tensor_by_name("keep_prob:0")
-        height_tensor = graph.get_tensor_by_name("input_height:0")
-        width_reduction_tensor = graph.get_tensor_by_name("width_reduction:0")
-        logits = tf.get_collection("logits")[0]
-
-        # Constants that are saved inside the model itself
-        WIDTH_REDUCTION, HEIGHT = sess.run([width_reduction_tensor, height_tensor])
-
-        #decoded, _ = tf.nn.ctc_greedy_decoder(logits, seq_len)
-        decoded = tf.nn.softmax(logits)
+        self.lastUsed = datetime.datetime.now()
 
         #original_image = cv2.imread(image_path,True)
-
+        original_image_shape = image.shape
+        
         image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY) # Pre-process
-        new_width = int(float(HEIGHT * image.shape[1]) / image.shape[0])
-        image = cv2.resize(image, (new_width, HEIGHT))
+        new_width = int(float(self.HEIGHT * image.shape[1]) / image.shape[0])
+        image = cv2.resize(image, (new_width, self.HEIGHT))
 
         image = (255.-image)/255
         image = np.asarray(image).reshape(1,image.shape[0],image.shape[1],1)
 
-        seq_lengths = [ image.shape[2] / WIDTH_REDUCTION ]
+        seq_lengths = [ image.shape[2] / self.WIDTH_REDUCTION ]
 
-        prediction = sess.run(decoded,
+        prediction = self.sess.run(self.decoded,
                             feed_dict={
-                                input: image,
-                                seq_len: seq_lengths,
-                                rnn_keep_prob: 1.0,
+                                self.input: image,
+                                self.seq_len: seq_lengths,
+                                self.rnn_keep_prob: 1.0,
                             })
-        sess.close()
 
         # prediction -> [frame, sample, character]
 
@@ -95,9 +100,12 @@ class E2EClassifier:
                 pred_per_frame.append(np.argmax(v[0]))
 
         width_refactor = 1.
-        width_refactor *= image.shape[0]
-        width_refactor /= HEIGHT
-        width_refactor *= WIDTH_REDUCTION
+        width_refactor *= original_image_shape[0]
+        width_refactor /= self.HEIGHT
+        width_refactor *= self.WIDTH_REDUCTION
+        
+        # [!] Force the frames to span over the whole width of the image
+        # width_refactor = (1.*image.shape[2])/len(pred_per_frame)
 
         # Process symbol and positions
         result = []
@@ -118,3 +126,11 @@ class E2EClassifier:
         # for symbol, start, end in result:
         #     self.logger.info(f'{symbol} {start} {end}')
         return result
+
+    
+    def __del__(self):
+        self.sess.close()
+        self.logger.info('Object destroyed!')
+    
+    def getLastUsed(self):
+        return self.lastUsed
