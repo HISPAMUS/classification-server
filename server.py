@@ -69,8 +69,14 @@ def symbol_classify(id):
         shape_image, position_image = _storage.crop(id, left, top, right, bottom)
     except Exception as e:
         return message('Error cropping image'), 400
+    
+    try:
+        model = _model_manager.getSymbolClassifierModel(request.form['model'])
+    except OSError as ex:
+        return message('Error loading model. Specified model does not exist'), 404
 
-    shape, position = _symbol_classifier.predict(shape_image, position_image, n)
+    shape, position = model.predict(shape_image, position_image, n)
+    
     if shape is None or position is None:
         return message('Error predicting symbol'), 404
     
@@ -93,7 +99,10 @@ def e2e_classify(id):
 @app.route('/image/<id>/e2e', methods=['POST'])
 def e2e_classify(id):
 
-    model = _model_manager.getE2EModel(request.form['model'])
+    try:
+        model = _model_manager.getE2EModel(request.form['model'])
+    except IOError as e:
+        return message('Error loading model. The requested model does not exist'), 404
 
     if not _storage.exists(id):
         return message(f'Image [{id}] does not exist'), 404
@@ -130,8 +139,8 @@ if __name__ == "__main__":
     # Symbol classification
     parser.add_argument('-sc_model_shape',    dest='sc_model_shape', type=str, default='model/symbol-classification/shape_classifier.h5')
     parser.add_argument('-sc_model_position', dest='sc_model_position',    type=str, default='model/symbol-classification/position_classifier.h5')
-    parser.add_argument('-sc_vocabulary_shape',    dest='sc_vocabulary_shape', type=str, default='model/symbol-classification/shape_map.npy')
-    parser.add_argument('-sc_vocabulary_position', dest='sc_vocabulary_position',    type=str, default='model/symbol-classification/position_map.npy')
+    parser.add_argument('-sc_vocabulary_shape',    dest='sc_vocabulary_shape', type=str, default='model/symbol-classification/symbol_shape_map.npy')
+    parser.add_argument('-sc_vocabulary_position', dest='sc_vocabulary_position',    type=str, default='model/symbol-classification/symbol_position_map.npy')
 
     # End-to-end recognition
     parser.add_argument('-e2e_model', dest='e2e_model', type=str, default='model/end-to-end/model_muret_v0_40.meta')
@@ -143,13 +152,13 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    _model_manager = ModelManager(args.e2e_vocabulary)
+    _model_manager = ModelManager(args.e2e_vocabulary, args.sc_vocabulary_shape, args.sc_vocabulary_position)
 
     # Initialize image storage
     _storage = ImageStorage(args.image_storage)
 
     # Create symbol classifier, which loads the models and the dictionary for the vocabularies
-    _symbol_classifier = SymbolClassifier(args.sc_model_shape, args.sc_model_position, args.sc_vocabulary_shape, args.sc_vocabulary_position)
+    #_symbol_classifier = SymbolClassifier(args.sc_model_shape, args.sc_model_position, args.sc_vocabulary_shape, args.sc_vocabulary_position)
 
     # Create end-to-end classifier
     #_e2e_classifier = E2EClassifier(args.e2e_model, args.e2e_vocabulary)

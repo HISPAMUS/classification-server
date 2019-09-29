@@ -2,6 +2,7 @@ import numpy as np
 from keras.models import load_model
 from keras import backend as K
 import logging
+import datetime
 
 
 __all__ = [ 'SymbolClassifier' ]
@@ -10,6 +11,7 @@ __all__ = [ 'SymbolClassifier' ]
 class SymbolClassifier:
 
     logger = logging.getLogger('SymbolClassifier')
+    lastUsed = None
 
 
     def __init__(self, model_shape_path, model_position_path, vocabulary_shape, vocabulary_position):
@@ -35,8 +37,12 @@ class SymbolClassifier:
 
         self.logger.info('Models loaded')
 
+        self.lastUsed = datetime.datetime.now()
+
 
     def predict(self, shape_image, position_image, n):
+        
+        self.lastUsed = datetime.datetime.now()
         # Predictions
         shape_prediction_all = self.model_shape.predict(shape_image)
         #self.logger.info(shape_prediction_all)
@@ -53,3 +59,7 @@ class SymbolClassifier:
         #self.logger.info(position_prediction)
 
         return ([self.shape_vocabulary[x] for x in shape_prediction], [self.position_vocabulary[x] for x in position_prediction])
+    
+    def getLastUsed(self):
+        
+        return self.lastUsed
