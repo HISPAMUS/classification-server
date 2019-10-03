@@ -5,6 +5,9 @@ import datetime
 from e2e_classifier import E2EClassifier
 from symbol_classifier import SymbolClassifier
 
+from os import walk
+import json
+
 __all__ = ['ModelManager']
 
 class ModelManager:
@@ -24,13 +27,16 @@ class ModelManager:
 
     mutex_lock = threading.Lock() #Just secure that two or several threads don't mess up our dictionaries, they are shared resources who could be corrupted
 
+    waitTime = 60.0
+    eraseLimit = 30.0 * 60.0
+
     def __init__(self, defaultVocabularyE2E, defaultVocabularyShape, defaultVocabularyPos):
         
         self.logger.info('Model Manager Initialized')
         self.vocabularyE2E = defaultVocabularyE2E
         self.vocabularyShape = defaultVocabularyShape
         self.vocabularyPos = defaultVocabularyPos
-        threading.Timer(60.0, self.checkStatus).start()
+        threading.Timer(60.0 * self.waitTime, self.checkStatus).start()
     
     def getE2EModel(self, e2eModel):
 
@@ -88,11 +94,26 @@ class ModelManager:
             
             for key in list(self.symbolclassificators):
                 elapsed_time = nowtime - self.symbolclassificators[key].getLastUsed()
-                if (elapsed_time.seconds > 30.0):
+                if (elapsed_time.seconds > self.eraseLimit):
                     self.logger.info('Erasing unused model')
                     del self.symbolclassificators[key]
         
-        threading.Timer(60.0, self.checkStatus).start()
+        threading.Timer(60.0* self.waitTime, self.checkStatus).start()
+    
+    def getModelList(self, notationType, manuscriptType, project):
+        path = "db/" + notationType + "/" + manuscriptType + "/" 
+        finalList = []
+        for (_, _, filenames) in walk(path):
+            for file in filenames:
+                with open(path + file) as model_data:
+                    data = json.load(model_data)
+                    for model_project in data['projects']:
+                        if int(model_project) == int(project):
+                            finalList.append(data)
+                            break
+        
+        return finalList
+
 
 
 

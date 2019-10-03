@@ -6,8 +6,8 @@ LOG=/tmp/$APP.log
 ERROR=/tmp/$APP-error.log
 
 PORT=8888
-VENV="source server/bin/activate"
-COMMAND="python server.py -port $PORT"
+VENV="source env/bin/activate"
+COMMAND="python3 server.py -port $PORT"
 
 #USR=muret
 

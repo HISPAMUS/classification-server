@@ -48,6 +48,11 @@ def image_delete(id):
     else:
         return message(f'Image [{id}] does not exist'), 404
 
+@app.route('/models', methods=['GET'])
+def getAvailableModels():
+    modelList = _model_manager.getModelList(request.form['notationType'], request.form['manuscriptType'], request.form['project'])
+    return message(modelList), 200
+
 
 @app.route('/image/<id>/symbol', methods=['POST'])
 @app.route('/image/<id>/bbox', methods=['POST'])
