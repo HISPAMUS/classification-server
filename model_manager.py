@@ -7,6 +7,7 @@ from symbol_classifier import SymbolClassifier
 
 from os import walk
 import json
+import os
 
 __all__ = ['ModelManager']
 
@@ -101,18 +102,30 @@ class ModelManager:
         threading.Timer(60.0* self.waitTime, self.checkStatus).start()
     
     def getModelList(self, notationType, manuscriptType, project):
-        path = "db/" + notationType + "/" + manuscriptType + "/" 
+        defpath = "db/" + notationType + "/" + manuscriptType + "/" 
         finalList = []
-        for (_, _, filenames) in walk(path):
-            for file in filenames:
-                with open(path + file) as model_data:
-                    data = json.load(model_data)
-                    for model_project in data['projects']:
-                        if int(model_project) == int(project):
-                            finalList.append(data)
-                            break
+        #First I put the project's specific models
+        #Need to check if the project requested exists or sth
+        if project != None:
+            projectPath = defpath + project + "/"
+            if os.path.isdir(projectPath):
+                for file in os.listdir(projectPath):
+                    if(file.endswith(".json")):
+                        #self.logger.info(projectPath+file)
+                        finalList.append(self.__loadJSON(projectPath+file)) 
+
+        for file in os.listdir(defpath):
+            if file.endswith(".json"):
+                #self.logger.info(defpath + file)
+                finalList.append(self.__loadJSON(defpath+file))
         
         return finalList
+    
+    def __loadJSON(self,pathToOpen):
+        with open(pathToOpen) as model_data:
+            data = json.load(model_data)
+            return data
+
 
 
 

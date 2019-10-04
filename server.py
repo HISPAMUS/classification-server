@@ -50,7 +50,7 @@ def image_delete(id):
 
 @app.route('/models', methods=['GET'])
 def getAvailableModels():
-    modelList = _model_manager.getModelList(request.form['notationType'], request.form['manuscriptType'], request.form['project'])
+    modelList = _model_manager.getModelList(request.form['notationType'], request.form['manuscriptType'],request.form.get('project'))
     return message(modelList), 200
 
 
