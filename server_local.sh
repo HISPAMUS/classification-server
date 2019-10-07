@@ -5,7 +5,7 @@ PID=/tmp/$APP.pid
 LOG=/tmp/$APP.log
 ERROR=/tmp/$APP-error.log
 
-PORT=8888
+PORT=8000
 VENV="source env/bin/activate"
 COMMAND="python3 server.py -port $PORT"
 
@@ -84,6 +84,11 @@ stop() {
         echo "No pid file. Already stopped?"
     fi
 }
+
+case "$2" in 
+    'local')
+        COMMAND="python3 server.py -port $PORT -ip 127.0.0.1"
+esac
 
 case "$1" in
     'start')

@@ -85,6 +85,11 @@ stop() {
     fi
 }
 
+case "$2" in 
+    'local')
+        COMMAND="python /home/muret/classification-server/server.py -port $PORT -ip 127.0.0.1"
+esac
+
 case "$1" in
     'start')
             start

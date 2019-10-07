@@ -155,6 +155,7 @@ if __name__ == "__main__":
     parser.add_argument('-port', dest='port', type=int, default=8888)
     parser.add_argument('-image_storage', dest='image_storage', type=str, default='images')
 
+    parser.add_argument('-ip', dest='ip', type=str, default='0.0.0.0')
     args = parser.parse_args()
 
     _model_manager = ModelManager(args.e2e_vocabulary, args.sc_vocabulary_shape, args.sc_vocabulary_position)
@@ -168,5 +169,6 @@ if __name__ == "__main__":
     # Create end-to-end classifier
     #_e2e_classifier = E2EClassifier(args.e2e_model, args.e2e_vocabulary)
 
+
     # Start server, 0.0.0.0 allows connections from other computers
-    app.run(host='127.0.0.1', port=args.port)
+    app.run(host=args.ip, port=args.port)
