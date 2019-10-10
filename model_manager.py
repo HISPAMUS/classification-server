@@ -39,9 +39,14 @@ class ModelManager:
         self.vocabularyPos = defaultVocabularyPos
         threading.Timer(60.0 * self.waitTime, self.checkStatus).start()
     
-    def getE2EModel(self, e2eModel):
+    def getE2EModel(self, e2eModel, vocabulary):
 
         e2eModelToReturn = None
+
+        vocabularyToUse = self.vocabularyE2E
+
+        if(vocabulary!= None):
+            vocabularyToUse = self.E2EPath + vocabulary + '.npy'
 
         with self.mutex_lock:
          
@@ -52,7 +57,7 @@ class ModelManager:
             else:
                 self.logger.info('E2E Model does not exist in memory, loading it...')
                 modelPath = self.E2EPath + e2eModel + '.meta'
-                newE2EModel = E2EClassifier(modelPath, self.vocabularyE2E)
+                newE2EModel = E2EClassifier(modelPath, vocabularyToUse)
                 self.e2eModels[e2eModel] = newE2EModel
                 e2eModelToReturn = newE2EModel
         

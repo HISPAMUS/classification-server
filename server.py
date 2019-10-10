@@ -105,9 +105,9 @@ def e2e_classify(id):
 def e2e_classify(id):
 
     try:
-        model = _model_manager.getE2EModel(request.form['model'])
+        model = _model_manager.getE2EModel(request.form['model'], request.form.get('vocabulary'))
     except IOError as e:
-        return message('Error loading model. The requested model does not exist'), 404
+        return message('Error loading model. The requested model or vocabulary does not exist'), 404
 
     if not _storage.exists(id):
         return message(f'Image [{id}] does not exist'), 404
