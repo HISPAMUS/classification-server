@@ -5,7 +5,6 @@ import datetime
 from e2e_classifier import E2EClassifier
 from symbol_classifier import SymbolClassifier
 
-from os import walk
 import json
 import os
 
@@ -39,14 +38,10 @@ class ModelManager:
         self.vocabularyPos = defaultVocabularyPos
         threading.Timer(60.0 * self.waitTime, self.checkStatus).start()
     
-    def getE2EModel(self, e2eModel, vocabulary):
+    def getE2EModel(self, e2eModel):
 
         e2eModelToReturn = None
-
-        vocabularyToUse = self.vocabularyE2E
-
-        if(vocabulary!= None):
-            vocabularyToUse = self.E2EPath + vocabulary + '.npy'
+        folderPath = self.E2EPath + e2eModel + "/"
 
         with self.mutex_lock:
          
@@ -55,8 +50,14 @@ class ModelManager:
                 e2eModelToReturn = self.e2eModels[e2eModel]
                 
             else:
+                vocabularyToUse = self.vocabularyE2E
                 self.logger.info('E2E Model does not exist in memory, loading it...')
-                modelPath = self.E2EPath + e2eModel + '.meta'
+                modelPath = folderPath + e2eModel + '.meta'
+                
+                for file in os.listdir(folderPath):
+                    if file.endswith(".npy") or file.endswith(".txt"):
+                        vocabularyToUse = folderPath + file
+                
                 newE2EModel = E2EClassifier(modelPath, vocabularyToUse)
                 self.e2eModels[e2eModel] = newE2EModel
                 e2eModelToReturn = newE2EModel
@@ -106,26 +107,41 @@ class ModelManager:
         
         threading.Timer(60.0* self.waitTime, self.checkStatus).start()
     
-    def getModelList(self, notationType, manuscriptType, project):
+    def getModelList(self, notationType, manuscriptType, collection, project, classifier):
         defpath = "db/" + notationType + "/" + manuscriptType + "/" 
         finalList = []
         #First I put the project's specific models
-        #Need to check if the project requested exists or sth
-        if project != None:
-            projectPath = defpath + project + "/"
-            if os.path.isdir(projectPath):
-                for file in os.listdir(projectPath):
-                    if(file.endswith(".json")):
-                        #self.logger.info(projectPath+file)
-                        finalList.append(self.__loadJSON(projectPath+file)) 
-
-        for file in os.listdir(defpath):
-            if file.endswith(".json"):
-                #self.logger.info(defpath + file)
-                finalList.append(self.__loadJSON(defpath+file))
+        #Need to check if the project requested exists or sth 
+        self.searchByProject(finalList, defpath, collection, project, classifier)
+        
+        self.searchInDirandAppendtoList(defpath, finalList, classifier)
         
         return finalList
     
+    def searchByProject(self, listToUse, defpath, collection, project, classifier):
+        
+        projectPath = ""
+        if collection != None and project != None:
+            self.logger.info('Searching by project and collection')
+            projectPath = defpath + collection + "/" + project + "/"
+            self.logger.info(projectPath)
+            if os.path.isdir(projectPath):
+                self.searchInDirandAppendtoList(projectPath, listToUse, classifier)
+        elif collection != None:
+            self.logger.info('Searching by collection only')
+            projectPath = defpath + collection + "/"
+            for _, dirs, _ in os.walk(projectPath):
+                for directory in dirs:
+                    self.searchInDirandAppendtoList(projectPath+directory+"/", listToUse, classifier)
+
+    
+    def searchInDirandAppendtoList(self, dirToSearch,listToappend, classifier):
+        for file in os.listdir(dirToSearch):
+            if file.endswith(".json"):
+                data = self.__loadJSON(dirToSearch+file)
+                if classifier == None or classifier == data['classifier_type']:
+                    listToappend.append(data)
+
     def __loadJSON(self,pathToOpen):
         with open(pathToOpen) as model_data:
             data = json.load(model_data)

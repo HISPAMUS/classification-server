@@ -3,11 +3,13 @@ import flask
 from flask import request, jsonify
 import logging
 import os
+import json
 
 from e2e_classifier import E2EClassifier
 from image_storage import ImageStorage
 from symbol_classifier import SymbolClassifier
 from model_manager import ModelManager
+from json import JSONDecodeError
 
 
 app = flask.Flask(__name__)
@@ -48,9 +50,13 @@ def image_delete(id):
     else:
         return message(f'Image [{id}] does not exist'), 404
 
-@app.route('/models', methods=['GET'])
+@app.route('/models', methods=['POST'])
 def getAvailableModels():
-    modelList = _model_manager.getModelList(request.form['notationType'], request.form['manuscriptType'],request.form.get('project'))
+    try:
+        modelList = _model_manager.getModelList(request.form['notationType'], request.form['manuscriptType'], request.form.get('collection'),request.form.get('project'), request.form.get('classifierModelType'))
+    except JSONDecodeError as e:
+        return message('Error reading JSON data file: ' + str(e)), 500
+    
     return message(modelList), 200
 
 
@@ -105,7 +111,7 @@ def e2e_classify(id):
 def e2e_classify(id):
 
     try:
-        model = _model_manager.getE2EModel(request.form['model'], request.form.get('vocabulary'))
+        model = _model_manager.getE2EModel(request.form['model'])
     except IOError as e:
         return message('Error loading model. The requested model or vocabulary does not exist'), 404
 
