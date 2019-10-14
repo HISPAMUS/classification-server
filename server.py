@@ -20,6 +20,7 @@ _e2e_classifier = None
 _model_manager = None
 
 
+
 def message(text):
     return jsonify({ 'message': text })
 
