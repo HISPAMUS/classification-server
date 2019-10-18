@@ -143,6 +143,10 @@ def e2e_classify(id):
                 "end": x[2]} for x in predictions]
     return jsonify(result), 200
 
+@app.route('/ping', methods=['GET'])
+def ping():
+    return message('pong'), 200
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
