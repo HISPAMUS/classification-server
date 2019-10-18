@@ -77,7 +77,9 @@ class ModelManager:
                 self.logger.info('Symbol Classificator does not exist in memory, loading it...')
                 modelPositionPath = self.SymbolPath + symbolClassName + '_position.h5'
                 modelShapePath = self.SymbolPath + symbolClassName + '_shape.h5'
-                newSymbolClassModel = SymbolClassifier(modelShapePath, modelPositionPath, self.vocabularyShape, self.vocabularyPos)
+                vocabularyPosition = self.SymbolPath + symbolClassName + '_position_map.npy'
+                vocabularyShape = self.SymbolPath + symbolClassName + '_shape_map.npy'
+                newSymbolClassModel = SymbolClassifier(modelShapePath, modelPositionPath, vocabularyShape, vocabularyPosition)
                 self.symbolclassificators[symbolClassName] = newSymbolClassModel
                 symbolModel = newSymbolClassModel
             

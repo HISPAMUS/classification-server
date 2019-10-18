@@ -20,7 +20,6 @@ _e2e_classifier = None
 _model_manager = None
 
 
-
 def message(text):
     return jsonify({ 'message': text })
 
@@ -85,6 +84,7 @@ def symbol_classify(id):
     try:
         model = _model_manager.getSymbolClassifierModel(request.form['model'])
     except OSError as ex:
+        _logger.error(ex)
         return message('Error loading model. Specified model does not exist'), 404
 
     shape, position = model.predict(shape_image, position_image, n)
