@@ -109,8 +109,8 @@ class ModelManager:
         
         threading.Timer(60.0* self.waitTime, self.checkStatus).start()
     
-    def getModelList(self, notationType, manuscriptType, collection, project, classifier):
-        defpath = "db/" + notationType + "/" + manuscriptType + "/" 
+    def getModelList(self, prefix, notationType, manuscriptType, collection, project, classifier):
+        defpath = "db/" + prefix + notationType + "/" + manuscriptType + "/" 
         finalList = []
         #First I put the project's specific models
         #Need to check if the project requested exists or sth 

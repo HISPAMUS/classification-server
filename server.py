@@ -50,14 +50,25 @@ def image_delete(id):
     else:
         return message(f'Image [{id}] does not exist'), 404
 
-@app.route('/models', methods=['POST'])
-def getAvailableModels():
+@app.route('/e2emodels', methods=['POST'])
+def getE2Emodels():
     try:
-        modelList = _model_manager.getModelList(request.form['notationType'], request.form['manuscriptType'], request.form.get('collection'),request.form.get('project'), request.form.get('classifierModelType'))
+        modelList = getAvailableModels("end2end/",request.form['notationType'], request.form['manuscriptType'], request.form.get('collection'),request.form.get('project'), request.form.get('classifierModelType'))
     except JSONDecodeError as e:
         return message('Error reading JSON data file: ' + str(e)), 500
     
-    return message(modelList), 200
+    return message(modelList)
+
+@app.route('/symbolmodels', methods=['POST'])
+def getSymbolModels():
+    try:
+        modelList = getAvailableModels("symbols/",request.form['notationType'], request.form['manuscriptType'], request.form.get('collection'),request.form.get('project'), request.form.get('classifierModelType'))
+    except JSONDecodeError as e:
+        return message('Error reading JSON data file: ' + str(e)), 500
+    
+    return message(modelList)
+def getAvailableModels(prefix, notationType, manuscriptType, collection, project, classifier):
+    return _model_manager.getModelList(prefix, notationType, manuscriptType, collection, project, classifier)
 
 
 @app.route('/image/<id>/symbol', methods=['POST'])
