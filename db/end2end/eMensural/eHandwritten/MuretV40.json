@@ -2,5 +2,5 @@
     "name": "Muret V40",
     "id": "model_muret_v0_40",
     "last_train": "2019-10-03T08:38:31.888Z",
-    "classifier_type": "agnosticEnd2End"
+    "classifier_type": "eAgnosticEnd2End"
 }

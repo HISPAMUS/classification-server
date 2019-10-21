@@ -101,11 +101,11 @@ class ModelManager:
                     #del self.e2eModels[key].value
                     del self.e2eModels[key]
             
-            for key in list(self.symbolclassificators):
-                elapsed_time = nowtime - self.symbolclassificators[key].getLastUsed()
-                if (elapsed_time.seconds > self.eraseLimit):
-                    self.logger.info('Erasing unused model')
-                    del self.symbolclassificators[key]
+            #for key in list(self.symbolclassificators):
+            #    elapsed_time = nowtime - self.symbolclassificators[key].getLastUsed()
+            #    if (elapsed_time.seconds > self.eraseLimit):
+            #        self.logger.info('Erasing unused model')
+            #        del self.symbolclassificators[key]
         
         threading.Timer(60.0* self.waitTime, self.checkStatus).start()
     
