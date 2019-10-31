@@ -1,6 +1,0 @@
-{
-    "name": "Muret V40 trained for project 2",
-    "id": "model_muret_v0_40",
-    "last_train": "2019-10-03T08:38:31.888Z",
-    "classifier_type": "agnosticEnd2End"
-}
