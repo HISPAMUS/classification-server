@@ -18,6 +18,7 @@ class ModelManager:
 
     e2eModels = dict()
     symbolclassificators = dict()
+    foldercorrespondence = dict()
 
     vocabularyE2E = ''
     
@@ -39,6 +40,10 @@ class ModelManager:
         self.vocabularyShape = defaultVocabularyShape
         self.vocabularyPos = defaultVocabularyPos
         threading.Timer(60.0 * self.waitTime, self.checkStatus).start()
+
+        self.foldercorrespondence['eAgnosticSymbols'] = "model/symbol-classification"
+        self.foldercorrespondence['eAgnosticEnd2End'] = "model/end-to-end"
+
     
     def getE2EModel(self, e2eModel):
 
@@ -149,21 +154,48 @@ class ModelManager:
 
     def searchInDirandAppendtoList(self, dirToSearch,listToappend, classifier):
         for file in os.listdir(dirToSearch):
-            if file.endswith(".json"):
+            if file.endswith(".json") and not file.startswith('.'):
                 data = self.__loadJSON(dirToSearch+file)
-                if classifier == None or classifier == data['classifier_type']:
-                    listToappend.append(data)
+                if not data == None:
+                    if classifier == None or classifier == data['classifier_type']:
+                        listToappend.append(data)
                 
     
     def registerNewModel(self, name, classifier_type, notation_type, manuscript_type, collection, project, modelFile):
         
+        modelid = ""
+        vocabulary = ""
         with ZipFile(modelFile, 'r') as file:
-            logging.info(file.namelist())
+            filenames = file.namelist()
+            for names in filenames:
+                if names.endswith(".index"):
+                    modelid = names.split(".")[0]
+                if names.endswith(".npy"):
+                    vocabulary = names.split(".")[0]
+        
+        self.storeNewModel(modelid, classifier_type, modelFile)
+        self.indexNewModel(modelid, name, classifier_type, notation_type, manuscript_type, collection, project, vocabulary)
+
         return
+    
+    def storeNewModel(self, modelid, classifier_type, modelfile):
+        
+        store_path = self.foldercorrespondence[classifier_type] + "/" + modelid
+        
+        try:
+            os.mkdir(store_path)
+        except FileExistsError:
+            self.logger.info('Created folder already exists')
+
+        with ZipFile(modelfile, 'r') as file:
+            file.extractall(store_path)
+        
+        return
+
 
     def indexNewModel(self, modelid, name, classifier_type, notation_type, manuscript_type, collection, project, vocabulary):
         
-        path_to_store = "db/" + notation_type + "/" + manuscript_type
+        path_to_store = "db/" + notation_type + "/" + manuscript_type + "/"
         if not collection == None:
             path_to_store += collection + "/"
             if not project == None:
@@ -174,19 +206,25 @@ class ModelManager:
         data = {
             "name" : name,
             "id" : modelid,
-            "last_train" : date.today(),
+            "last_train" : str(date.today()),
             "vocabulary" : vocabulary,
             "classifier_type": classifier_type
         }
 
-        with open(path_to_store + "/" + modelid + ".json", 'w') as out:
+        file = path_to_store + name + ".json"
+
+        with open(file, 'w') as out:
             json.dump(data, out)
             
 
     def __loadJSON(self,pathToOpen):
-        with open(pathToOpen) as model_data:
-            data = json.load(model_data)
-            return data
+        try:
+            with open(pathToOpen) as model_data:
+                data = json.load(model_data)
+                return data
+        except Exception:
+            logging.info("File " + pathToOpen + " could not be opened")
+            return None
 
 
 

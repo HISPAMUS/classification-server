@@ -19,6 +19,9 @@ _symbol_classifier = None
 _e2e_classifier = None
 _model_manager = None
 
+UPLOAD_FOLDER = 'temp/'
+ALLOWED_EXTENSIONS = {'.zip'}
+
 
 def message(text):
     return jsonify({ 'message': text })
@@ -62,10 +65,13 @@ def getE2Emodels():
 def getAvailableModels(prefix, notationType, manuscriptType, collection, project, classifier):
     return _model_manager.getModelList(prefix, notationType, manuscriptType, collection, project, classifier)
 
-#@app.route('/registerModel', methods=['POST'])
-#def registerModel():
-#    _model_manager.registerNewModel(self, request.form['name'], request.form['classifier_type'], request.form['notation_type'], request.form['manuscript_type'], requet.form.get('collection'), request.form.get('project'), request.form['modelFile'])
-#    return message('Yay', 200)
+@app.route('/registerModel', methods=['POST'])
+def registerModel():
+    ziplocation = "temp/" + request.files['eModelFile'].filename
+    request.files['eModelFile'].save(ziplocation)
+    _model_manager.registerNewModel(request.form['eName'], request.form['eClassifierType'], request.form['eNotationType'], request.form['eManuscriptType'], request.form.get('eCollection'), request.form.get('eProject'), ziplocation)
+    os.remove(ziplocation)
+    return message('Yay')
 
 
 @app.route('/image/<id>/symbol', methods=['POST'])
@@ -188,6 +194,6 @@ if __name__ == "__main__":
     # Create end-to-end classifier
     #_e2e_classifier = E2EClassifier(args.e2e_model, args.e2e_vocabulary)
 
-
+    app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
     # Start server, 0.0.0.0 allows connections from other computers
     app.run(host=args.ip, port=args.port)
