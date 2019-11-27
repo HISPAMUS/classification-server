@@ -117,8 +117,21 @@ class ModelManager:
         self.searchByProject(finalList, defpath, collection, project, classifier)
         
         self.searchInDirandAppendtoList(defpath, finalList, classifier)
-        
-        return finalList
+
+        response = self.erase_duplicates(finalList)
+
+        return response
+
+    def erase_duplicates(self,listofdata):
+        seen = set()
+        return_list = []
+        for data in listofdata:
+            tup_data = tuple(data.items())
+            if tup_data not in seen:
+                seen.add(tup_data)
+                return_list.append(data)
+
+        return return_list        
     
     def searchByProject(self, listToUse, defpath, collection, project, classifier):
         
@@ -134,7 +147,8 @@ class ModelManager:
             projectPath = defpath + collection + "/"
             for _, dirs, _ in os.walk(projectPath):
                 for directory in dirs:
-                    self.searchInDirandAppendtoList(projectPath+directory+"/", listToUse, classifier)
+                    self.searchInDirandAppendtoList(projectPath + directory + "/", listToUse, classifier)
+            self.searchInDirandAppendtoList(projectPath, listToUse, classifier)
 
     
     def searchInDirandAppendtoList(self, dirToSearch,listToappend, classifier):
