@@ -3,6 +3,7 @@ server-macos.sh
 model/
 images/
 test-images/
+temp/
 
 # VS Code
 .vscode
