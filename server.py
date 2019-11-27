@@ -62,6 +62,11 @@ def getE2Emodels():
 def getAvailableModels(prefix, notationType, manuscriptType, collection, project, classifier):
     return _model_manager.getModelList(prefix, notationType, manuscriptType, collection, project, classifier)
 
+#@app.route('/registerModel', methods=['POST'])
+#def registerModel():
+#    _model_manager.registerNewModel(self, request.form['name'], request.form['classifier_type'], request.form['notation_type'], request.form['manuscript_type'], requet.form.get('collection'), request.form.get('project'), request.form['modelFile'])
+#    return message('Yay', 200)
+
 
 @app.route('/image/<id>/symbol', methods=['POST'])
 @app.route('/image/<id>/bbox', methods=['POST'])

@@ -4,9 +4,11 @@ import datetime
 
 from e2e_classifier import E2EClassifier
 from symbol_classifier import SymbolClassifier
+from datetime import date
 
 import json
 import os
+from zipfile import ZipFile
 
 __all__ = ['ModelManager']
 
@@ -135,28 +137,51 @@ class ModelManager:
     
     def searchByProject(self, listToUse, defpath, collection, project, classifier):
         
-        projectPath = ""
-        if collection != None and project != None:
-            self.logger.info('Searching by project and collection')
-            projectPath = defpath + collection + "/" + project + "/"
-            self.logger.info(projectPath)
-            if os.path.isdir(projectPath):
-                self.searchInDirandAppendtoList(projectPath, listToUse, classifier)
-        elif collection != None:
-            self.logger.info('Searching by collection only')
-            projectPath = defpath + collection + "/"
-            for _, dirs, _ in os.walk(projectPath):
-                for directory in dirs:
-                    self.searchInDirandAppendtoList(projectPath + directory + "/", listToUse, classifier)
+        collectionPath = defpath + collection + "/"
+        projectPath = defpath + collection + "/" + project + "/"
+        self.logger.info(projectPath)
+        if os.path.isdir(projectPath):
             self.searchInDirandAppendtoList(projectPath, listToUse, classifier)
+        
+        if os.path.isdir(collectionPath):
+            self.searchInDirandAppendtoList(collectionPath, listToUse, classifier)
 
-    
+
     def searchInDirandAppendtoList(self, dirToSearch,listToappend, classifier):
         for file in os.listdir(dirToSearch):
             if file.endswith(".json"):
                 data = self.__loadJSON(dirToSearch+file)
                 if classifier == None or classifier == data['classifier_type']:
                     listToappend.append(data)
+                
+    
+    def registerNewModel(self, name, classifier_type, notation_type, manuscript_type, collection, project, modelFile):
+        
+        with ZipFile(modelFile, 'r') as file:
+            logging.info(file.namelist())
+        return
+
+    def indexNewModel(self, modelid, name, classifier_type, notation_type, manuscript_type, collection, project, vocabulary):
+        
+        path_to_store = "db/" + notation_type + "/" + manuscript_type
+        if not collection == None:
+            path_to_store += collection + "/"
+            if not project == None:
+                path_to_store += project
+        
+        self.logger.info("Storing info at: " + path_to_store)
+
+        data = {
+            "name" : name,
+            "id" : modelid,
+            "last_train" : date.today(),
+            "vocabulary" : vocabulary,
+            "classifier_type": classifier_type
+        }
+
+        with open(path_to_store + "/" + modelid + ".json", 'w') as out:
+            json.dump(data, out)
+            
 
     def __loadJSON(self,pathToOpen):
         with open(pathToOpen) as model_data:
