@@ -82,10 +82,10 @@ class ModelManager:
                 symbolModel = self.symbolclassificators[symbolClassName]
             else:
                 self.logger.info('Symbol Classificator does not exist in memory, loading it...')
-                modelPositionPath = self.SymbolPath + symbolClassName + '_position.h5'
-                modelShapePath = self.SymbolPath + symbolClassName + '_shape.h5'
-                vocabularyPosition = self.SymbolPath + symbolClassName + '_position_map.npy'
-                vocabularyShape = self.SymbolPath + symbolClassName + '_shape_map.npy'
+                modelPositionPath = self.SymbolPath + symbolClassName + "/" + symbolClassName + '_position.h5'
+                modelShapePath = self.SymbolPath + symbolClassName + "/" + symbolClassName + '_shape.h5'
+                vocabularyPosition = self.SymbolPath + symbolClassName + "/" + symbolClassName + '_position_map.npy'
+                vocabularyShape = self.SymbolPath + symbolClassName + "/" + symbolClassName + '_shape_map.npy'
                 newSymbolClassModel = SymbolClassifier(modelShapePath, modelPositionPath, vocabularyShape, vocabularyPosition)
                 self.symbolclassificators[symbolClassName] = newSymbolClassModel
                 symbolModel = newSymbolClassModel
@@ -172,6 +172,9 @@ class ModelManager:
                     modelid = names.split(".")[0]
                 if names.endswith(".npy"):
                     vocabulary = names.split(".")[0]
+                if names.endswith("h5"):
+                    pre = names.split(".")[0]
+                    modelid = names.split("_")[0]
         
         self.storeNewModel(modelid, classifier_type, modelFile)
         self.indexNewModel(modelid, name, classifier_type, notation_type, manuscript_type, collection, project, vocabulary)
@@ -181,7 +184,7 @@ class ModelManager:
     def storeNewModel(self, modelid, classifier_type, modelfile):
         
         store_path = self.foldercorrespondence[classifier_type] + "/" + modelid
-        
+
         try:
             os.mkdir(store_path)
         except FileExistsError:
@@ -196,10 +199,19 @@ class ModelManager:
     def indexNewModel(self, modelid, name, classifier_type, notation_type, manuscript_type, collection, project, vocabulary):
         
         path_to_store = "db/" + notation_type + "/" + manuscript_type + "/"
-        if not collection == None:
+        if not collection == None and not collection == "-1":
             path_to_store += collection + "/"
-            if not project == None:
-                path_to_store += project
+            try:
+                os.mkdir(path_to_store)
+            except FileExistsError:
+                pass
+            if not project == None and not project == "-1":
+                path_to_store += project + "/"
+                try: 
+                    os.mkdir(path_to_store)
+                except FileExistsError:
+                    pass
+
         
         self.logger.info("Storing info at: " + path_to_store)
 
