@@ -73,6 +73,22 @@ def registerModel():
     os.remove(ziplocation)
     return message('Yay')
 
+@app.route('/image/<id>/docAnalysis', methods=['POST'])
+def documentAnalyze(id):
+    if not _storage.exists(id):
+        return message(f'Image [{id}] does not exist'), 404
+    try:
+        image = _storage.read(id)
+    except Exception as e:
+        return message(f'Error reading image'), 400
+
+    result = {
+        "Staff": [{'x0':0, 'y0':0, 'xf':100, 'yf':100}],
+        "Title": [{'x0':100, 'y0':100, 'xf':200, 'yf':200}]
+    } 
+
+    return jsonify(result), 200
+
 
 @app.route('/image/<id>/symbol', methods=['POST'])
 @app.route('/image/<id>/bbox', methods=['POST'])
