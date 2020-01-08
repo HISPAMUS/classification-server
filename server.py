@@ -83,8 +83,8 @@ def documentAnalyze(id):
         return message(f'Error reading image'), 400
 
     result = {
-        "Staff": [{'x0':0, 'y0':0, 'xf':100, 'yf':100}],
-        "Title": [{'x0':100, 'y0':100, 'xf':200, 'yf':200}]
+        "staff": [{"x0": 0, "y0": 0, "xf": 100, "yf": 100}],
+        "title": [{"x0": 100, "y0": 100, "xf": 200, "yf": 200}]
     } 
 
     return jsonify(result), 200
