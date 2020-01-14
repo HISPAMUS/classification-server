@@ -89,6 +89,12 @@ def documentAnalyze(id):
 
     return jsonify(result), 200
 
+@app.route('/translate', methods=['POST'])
+def translateSequence():
+    print(request.form['sequence'])
+    result = ['**kern', '<br>', '-*']
+
+    return jsonify(result), 200
 
 @app.route('/image/<id>/symbol', methods=['POST'])
 @app.route('/image/<id>/bbox', methods=['POST'])
