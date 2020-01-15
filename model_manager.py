@@ -4,6 +4,7 @@ import datetime
 
 from e2e_classifier import E2EClassifier
 from symbol_classifier import SymbolClassifier
+from modelTemplates.simpleLanalysis import SimpleLayoutAnalysisScript
 from datetime import date
 
 import json
@@ -18,6 +19,7 @@ class ModelManager:
 
     e2eModels = dict()
     symbolclassificators = dict()
+    documentAnalysismodels = dict()
     foldercorrespondence = dict()
 
     vocabularyE2E = ''
@@ -70,6 +72,23 @@ class ModelManager:
                 e2eModelToReturn = newE2EModel
         
         return e2eModelToReturn
+    
+    def getDocumentAnalysisModel(self, documentAnalysisModel):
+        documentAnalysisReturn = None
+        
+        with self.mutex_lock:
+            
+            if documentAnalysisModel in self.documentAnalysismodels:
+                self.logger.info('Document Analysis Model exists in memory, returning it...')
+                documentAnalysisReturn = self.documentAnalysismodels[documentAnalysisModel]
+            
+            else:
+                newDocumentAnalysisModel = SimpleLayoutAnalysisScript()
+                self.documentAnalysismodels[documentAnalysisModel] = newDocumentAnalysisModel
+                documentAnalysisReturn = newDocumentAnalysisModel
+        
+        return documentAnalysisReturn
+
     
     def getSymbolClassifierModel(self, symbolClassName):
         

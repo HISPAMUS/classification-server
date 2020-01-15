@@ -81,10 +81,13 @@ def documentAnalyze(id):
         image = _storage.read(id)
     except Exception as e:
         return message(f'Error reading image'), 400
+    
+    documentAnalysisModel = _model_manager.getDocumentAnalysisModel(request.form['model'])
+
+    staffs = documentAnalysisModel.predict(image)
 
     result = {
-        "staff": [{"x0": 0, "y0": 0, "xf": 100, "yf": 100}],
-        "title": [{"x0": 100, "y0": 100, "xf": 200, "yf": 200}]
+        "staff": staffs
     } 
 
     return jsonify(result), 200
