@@ -78,8 +78,13 @@ def documentAnalyze(id):
     if not _storage.exists(id):
         return message(f'Image [{id}] does not exist'), 404
     try:
+        left = int(request.form['left'])
+        top = int(request.form['top'])
+        right = int(request.form['right'])
+        bottom = int(request.form['bottom'])
         image = _storage.read(id)
     except Exception as e:
+        _logger.info(e)
         return message(f'Error reading image'), 400
     
     documentAnalysisModel = _model_manager.getDocumentAnalysisModel(request.form['model'])

@@ -39,3 +39,5 @@ class SimpleLayoutAnalysisScript:
                 x,y,w,h = cv2.boundingRect(contour)
                 boundings.append({"x0": x, "y0": y, "xf": (x+w), "yf": (y+w)})
                 print('Staff',x,y,w,h)
+        
+        return boundings
