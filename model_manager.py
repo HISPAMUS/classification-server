@@ -135,12 +135,12 @@ class ModelManager:
         
         threading.Timer(60.0* self.waitTime, self.checkStatus).start()
     
-    def getModelList(self, prefix, notationType, manuscriptType, collection, project, classifier):
+    def getModelList(self, prefix, notationType, manuscriptType, collection, document, classifier):
         defpath = "db/" + prefix + notationType + "/" + manuscriptType + "/" 
         finalList = []
-        #First I put the project's specific models
-        #Need to check if the project requested exists or sth 
-        self.searchByProject(finalList, defpath, collection, project, classifier)
+        #First I put the document's specific models
+        #Need to check if the document requested exists or sth 
+        self.searchByDocument(finalList, defpath, collection, document, classifier)
         
         self.searchInDirandAppendtoList(defpath, finalList, classifier)
 
@@ -159,13 +159,13 @@ class ModelManager:
 
         return return_list        
     
-    def searchByProject(self, listToUse, defpath, collection, project, classifier):
+    def searchByDocument(self, listToUse, defpath, collection, document, classifier):
         
         collectionPath = defpath + collection + "/"
-        projectPath = defpath + collection + "/" + project + "/"
-        self.logger.info(projectPath)
-        if os.path.isdir(projectPath):
-            self.searchInDirandAppendtoList(projectPath, listToUse, classifier)
+        documentPath = defpath + collection + "/" + document + "/"
+        self.logger.info(documentPath)
+        if os.path.isdir(documentPath):
+            self.searchInDirandAppendtoList(documentPath, listToUse, classifier)
         
         if os.path.isdir(collectionPath):
             self.searchInDirandAppendtoList(collectionPath, listToUse, classifier)
@@ -180,7 +180,7 @@ class ModelManager:
                         listToappend.append(data)
                 
     
-    def registerNewModel(self, name, classifier_type, notation_type, manuscript_type, collection, project, modelFile):
+    def registerNewModel(self, name, classifier_type, notation_type, manuscript_type, collection, document, modelFile):
         
         modelid = ""
         vocabulary = ""
@@ -196,7 +196,7 @@ class ModelManager:
                     modelid = names.split("_")[0]
         
         self.storeNewModel(modelid, classifier_type, modelFile)
-        self.indexNewModel(modelid, name, classifier_type, notation_type, manuscript_type, collection, project, vocabulary)
+        self.indexNewModel(modelid, name, classifier_type, notation_type, manuscript_type, collection, document, vocabulary)
 
         return
     
@@ -215,7 +215,7 @@ class ModelManager:
         return
 
 
-    def indexNewModel(self, modelid, name, classifier_type, notation_type, manuscript_type, collection, project, vocabulary):
+    def indexNewModel(self, modelid, name, classifier_type, notation_type, manuscript_type, collection, document, vocabulary):
         
         path_to_store = "db/" + notation_type + "/" + manuscript_type + "/"
         if not collection == None and not collection == "-1":
@@ -224,8 +224,8 @@ class ModelManager:
                 os.mkdir(path_to_store)
             except FileExistsError:
                 pass
-            if not project == None and not project == "-1":
-                path_to_store += project + "/"
+            if not document == None and not document == "-1":
+                path_to_store += document + "/"
                 try: 
                     os.mkdir(path_to_store)
                 except FileExistsError:

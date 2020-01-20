@@ -56,20 +56,20 @@ def image_delete(id):
 @app.route('/models', methods=['POST'])
 def getE2Emodels():
     try:
-        modelList = getAvailableModels("",request.form['notationType'], request.form['manuscriptType'], request.form.get('collection'),request.form.get('project'), request.form.get('classifierModelType'))
+        modelList = getAvailableModels("",request.form['notationType'], request.form['manuscriptType'], request.form.get('collection'),request.form.get('document'), request.form.get('classifierModelType'))
     except JSONDecodeError as e:
         return message('Error reading JSON data file: ' + str(e)), 500
     
     return message(modelList)
 
-def getAvailableModels(prefix, notationType, manuscriptType, collection, project, classifier):
-    return _model_manager.getModelList(prefix, notationType, manuscriptType, collection, project, classifier)
+def getAvailableModels(prefix, notationType, manuscriptType, collection, document, classifier):
+    return _model_manager.getModelList(prefix, notationType, manuscriptType, collection, document, classifier)
 
 @app.route('/registerModel', methods=['POST'])
 def registerModel():
     ziplocation = "temp/" + request.files['eModelFile'].filename
     request.files['eModelFile'].save(ziplocation)
-    _model_manager.registerNewModel(request.form['eName'], request.form['eClassifierType'], request.form['eNotationType'], request.form['eManuscriptType'], request.form.get('eCollection'), request.form.get('eProject'), ziplocation)
+    _model_manager.registerNewModel(request.form['eName'], request.form['eClassifierType'], request.form['eNotationType'], request.form['eManuscriptType'], request.form.get('eCollection'), request.form.get('eDocument'), ziplocation)
     os.remove(ziplocation)
     return message('Yay')
 
