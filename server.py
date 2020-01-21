@@ -85,10 +85,19 @@ def documentAnalyze(id):
     
     documentAnalysisModel = _model_manager.getDocumentAnalysisModel(request.form['model'])
 
-    staffs = documentAnalysisModel.predict(image)
+    regions = documentAnalysisModel.predict(image)
+    regions.append({"regionType":"undefined"})
+    regions.append({"regionType":"title"})
+    regions.append({"regionType":"text"})
+    regions.append({"regionType":"author"})
+    regions.append({"regionType":"empty_staff"})
+    regions.append({"regionType":"lyrics"})
+    regions.append({"regionType":"multiple_lyrics"})
+    regions.append({"regionType":"other"})
+    regions.append({"regionType":"chords"})
 
     result = {
-        "staff": staffs
+        "regions": regions
     } 
 
     return jsonify(result), 200

@@ -37,7 +37,7 @@ class SimpleLayoutAnalysisScript:
         for contour in contours:
             if self.isStaff(contour, img.shape):
                 x,y,w,h = cv2.boundingRect(contour)
-                boundings.append({"x0": x, "y0": y, "xf": (x+w), "yf": (y+w)})
+                boundings.append({"x0": x, "y0": y, "xf": (x+w), "yf": (y+w), "regionType": "staff"})
                 print('Staff',x,y,w,h)
         
         return boundings
