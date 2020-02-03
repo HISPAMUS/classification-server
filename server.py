@@ -71,7 +71,7 @@ def registerModel():
     request.files['eModelFile'].save(ziplocation)
     _model_manager.registerNewModel(request.form['eName'], request.form['eClassifierType'], request.form['eNotationType'], request.form['eManuscriptType'], request.form.get('eCollection'), request.form.get('eDocument'), ziplocation)
     os.remove(ziplocation)
-    return message('Yay')
+    return message('Model registered correctly')
 
 @app.route('/image/<id>/docAnalysis', methods=['POST'])
 def documentAnalyze(id):

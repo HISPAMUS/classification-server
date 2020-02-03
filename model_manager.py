@@ -200,6 +200,26 @@ class ModelManager:
 
         return
     
+    def eraseModel(self, id):
+        #Search for model and type. Supposing that a model is unique in our environment, we have to locate the first document who has it, we will deindex it later
+        modelType = None
+        for root, _, files in os.walk("data/"):
+            for name in files:
+                if name.endswith(".json"):
+                    data = self.__loadJSON(os.path.join(root, name))
+                    if data["id"] == id:
+                        modelType = data["classifier_type"]
+                        break
+                
+            if modelType is not None:
+                break
+        
+        #We should have both the model type and name for the erasing
+
+
+
+        return (modelType is None) #I return the condition because if it does not exist, we won't do anything
+    
     def storeNewModel(self, modelid, classifier_type, modelfile):
         
         store_path = self.foldercorrespondence[classifier_type] + "/" + modelid
