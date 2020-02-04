@@ -62,6 +62,13 @@ def getE2Emodels():
     
     return message(modelList)
 
+@app.route('/model/<id>', methods=['DELETE'])
+def eraseModel(id):
+    erased = _model_manager.eraseModel(id)
+    if erased:
+        return message('Model erased'), 200
+    return message ('Model not found'), 404
+
 def getAvailableModels(prefix, notationType, manuscriptType, collection, document, classifier):
     return _model_manager.getModelList(prefix, notationType, manuscriptType, collection, document, classifier)
 
@@ -78,7 +85,7 @@ def documentAnalyze(id):
     if not _storage.exists(id):
         return message(f'Image [{id}] does not exist'), 404
     try:
-        image = _storage.read(id)
+        image = _storage.readsimple(id)
     except Exception as e:
         _logger.info(e)
         return message(f'Error reading image'), 400
@@ -176,11 +183,13 @@ def e2e_classify(id):
         bottom = int(request.form['bottom'])
         n = int(request.form.get('predictions', "1"))
     except ValueError as e:
+        _logger.info(e)
         return message('Wrong input values'), 400
 
     try:
         image = _storage.read(id, left, top, right, bottom)
     except Exception as e:
+        _logger.info(e)
         return message('Error cropping image'), 400
     # END TO-DO SUBIR DAVID    
         
