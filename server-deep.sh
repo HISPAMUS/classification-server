@@ -6,8 +6,8 @@ LOG=/tmp/$APP.log
 ERROR=/tmp/$APP-error.log
 
 PORT=8888
-VENV="source /home/muret/venv-cpu/bin/activate"
-COMMAND="python /home/muret/classification-server/server.py -port $PORT"
+VENV="source env/bin/activate"
+COMMAND="python server.py -port $PORT"
 
 #USR=muret
 

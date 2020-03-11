@@ -5,9 +5,7 @@ import logging
 import os
 import json
 
-from e2e_classifier import E2EClassifier
 from image_storage import ImageStorage
-from symbol_classifier import SymbolClassifier
 from model_manager import ModelManager
 from json import JSONDecodeError
 
@@ -71,14 +69,14 @@ def registerModel():
     request.files['eModelFile'].save(ziplocation)
     _model_manager.registerNewModel(request.form['eName'], request.form['eClassifierType'], request.form['eNotationType'], request.form['eManuscriptType'], request.form.get('eCollection'), request.form.get('eDocument'), ziplocation)
     os.remove(ziplocation)
-    return message('Yay')
+    return message('Model registered correctly')
 
 @app.route('/image/<id>/docAnalysis', methods=['POST'])
 def documentAnalyze(id):
     if not _storage.exists(id):
         return message(f'Image [{id}] does not exist'), 404
     try:
-        image = _storage.read(id)
+        image = _storage.readwhole(id)
     except Exception as e:
         _logger.info(e)
         return message(f'Error reading image'), 400
@@ -121,7 +119,10 @@ def symbol_classify(id):
         top = int(request.form['top'])
         right = int(request.form['right'])
         bottom = int(request.form['bottom'])
-        n = int(request.form.get('predictions', "1"))
+        ######################################## 
+        #n = int(request.form.get('predictions', "1"))
+        trained_with = request.form['train']
+        ######################################## 
     except ValueError as e:
         return message('Wrong input values'), 400
 
@@ -131,13 +132,15 @@ def symbol_classify(id):
         return message('Error cropping image'), 400
     
     try:
-        model = _model_manager.getSymbolClassifierModel(request.form['model'])
+        model = _model_manager.getSymbolClassifierModel(request.form['model'], trained_with) ##¿Retocar?##
     except OSError as ex:
         _logger.error(ex)
         return message('Error loading model. Specified model does not exist'), 404
 
-    shape, position = model.predict(shape_image, position_image, n)
-    
+    ###########################################################/
+    shape, position = model.predict(shape_image, position_image)
+    ###########################################################/
+
     if shape is None or position is None:
         return message('Error predicting symbol'), 404
     
@@ -161,7 +164,8 @@ def e2e_classify(id):
 def e2e_classify(id):
 
     try:
-        model = _model_manager.getE2EModel(request.form['model'])
+        trained_with = request.form['train']
+        model = _model_manager.getE2EModel(request.form['model'], trained_with) #¿Retocar?
     except IOError as e:
         return message('Error loading model. The requested model or vocabulary does not exist'), 404
 
@@ -174,7 +178,9 @@ def e2e_classify(id):
         top = int(request.form['top'])
         right = int(request.form['right'])
         bottom = int(request.form['bottom'])
-        n = int(request.form.get('predictions', "1"))
+        ######################################## 
+        #n = int(request.form.get('predictions', "1"))
+        ######################################## 
     except ValueError as e:
         return message('Wrong input values'), 400
 

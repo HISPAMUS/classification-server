@@ -2,8 +2,7 @@ import logging
 import threading
 import datetime
 
-from e2e_classifier import E2EClassifier
-from symbol_classifier import SymbolClassifier
+from Classifier import *
 from modelTemplates.simpleLanalysis import SimpleLayoutAnalysisScript
 from datetime import date
 
@@ -47,10 +46,13 @@ class ModelManager:
         self.foldercorrespondence['eAgnosticEnd2End'] = "model/end-to-end"
 
     
-    def getE2EModel(self, e2eModel):
+    def getE2EModel(self, e2eModel, trained_with):
 
         e2eModelToReturn = None
-        folderPath = self.E2EPath + e2eModel + "/"
+
+        ######################################/
+        folderPath = self.E2EPath + e2eModel
+        ######################################/
 
         with self.mutex_lock:
          
@@ -61,13 +63,18 @@ class ModelManager:
             else:
                 vocabularyToUse = self.vocabularyE2E
                 self.logger.info('E2E Model does not exist in memory, loading it...')
-                modelPath = folderPath + e2eModel + '.meta'
+                
+                #######################################/
+                #modelPath = folderPath + e2eModel + '.meta'
+                #######################################/
                 
                 for file in os.listdir(folderPath):
                     if file.endswith(".npy") or file.endswith(".txt"):
                         vocabularyToUse = folderPath + file
                 
-                newE2EModel = E2EClassifier(modelPath, vocabularyToUse)
+                ###################################################/# 
+                newE2EModel = End2EndClassifier(folderPath, trained_with)
+                ###################################################/# 
                 self.e2eModels[e2eModel] = newE2EModel
                 e2eModelToReturn = newE2EModel
         
@@ -83,14 +90,16 @@ class ModelManager:
                 documentAnalysisReturn = self.documentAnalysismodels[documentAnalysisModel]
             
             else:
-                newDocumentAnalysisModel = SimpleLayoutAnalysisScript()
+                ###################################################/
+                newDocumentAnalysisModel = DocumentAnalysis()
+                ###################################################/
                 self.documentAnalysismodels[documentAnalysisModel] = newDocumentAnalysisModel
                 documentAnalysisReturn = newDocumentAnalysisModel
         
         return documentAnalysisReturn
 
     
-    def getSymbolClassifierModel(self, symbolClassName):
+    def getSymbolClassifierModel(self, symbolClassName, trained_with):
         
         symbolModel = None
 
@@ -101,11 +110,19 @@ class ModelManager:
                 symbolModel = self.symbolclassificators[symbolClassName]
             else:
                 self.logger.info('Symbol Classificator does not exist in memory, loading it...')
-                modelPositionPath = self.SymbolPath + symbolClassName + "/" + symbolClassName + '_position.h5'
-                modelShapePath = self.SymbolPath + symbolClassName + "/" + symbolClassName + '_shape.h5'
-                vocabularyPosition = self.SymbolPath + symbolClassName + "/" + symbolClassName + '_position_map.npy'
-                vocabularyShape = self.SymbolPath + symbolClassName + "/" + symbolClassName + '_shape_map.npy'
-                newSymbolClassModel = SymbolClassifier(modelShapePath, modelPositionPath, vocabularyShape, vocabularyPosition)
+                
+                ###################################################################################/
+                #modelPositionPath = self.SymbolPath + symbolClassName + "/" + symbolClassName + '_position.h5'
+                #modelShapePath = self.SymbolPath + symbolClassName + "/" + symbolClassName + '_shape.h5'
+                #vocabularyPosition = self.SymbolPath + symbolClassName + "/" + symbolClassName + '_position_map.npy'
+                #vocabularyShape = self.SymbolPath + symbolClassName + "/" + symbolClassName + '_shape_map.npy'
+                folder_Path = self.SymbolPath + symbolClassName
+                ###################################################################################/
+
+                #######################################################################################################/# 
+                newSymbolClassModel = SymbolClassifier(folder_Path, trained_with)
+                #######################################################################################################/# 
+
                 self.symbolclassificators[symbolClassName] = newSymbolClassModel
                 symbolModel = newSymbolClassModel
             
@@ -199,6 +216,26 @@ class ModelManager:
         self.indexNewModel(modelid, name, classifier_type, notation_type, manuscript_type, collection, document, vocabulary)
 
         return
+    
+    def eraseModel(self, id):
+        #Search for model and type. Supposing that a model is unique in our environment, we have to locate the first document who has it, we will deindex it later
+        modelType = None
+        for root, _, files in os.walk("data/"):
+            for name in files:
+                if name.endswith(".json"):
+                    data = self.__loadJSON(os.path.join(root, name))
+                    if data["id"] == id:
+                        modelType = data["classifier_type"]
+                        break
+                
+            if modelType is not None:
+                break
+        
+        #We should have both the model type and name for the erasing
+
+
+
+        return (modelType is None) #I return the condition because if it does not exist, we won't do anything
     
     def storeNewModel(self, modelid, classifier_type, modelfile):
         
