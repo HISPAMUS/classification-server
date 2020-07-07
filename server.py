@@ -10,6 +10,7 @@ from image_storage import ImageStorage
 from symbol_classifier import SymbolClassifier
 from model_manager import ModelManager
 from json import JSONDecodeError
+from documentAnalysis import predict_regions
 
 
 app = flask.Flask(__name__)
@@ -92,19 +93,27 @@ def documentAnalyze(id):
     
     documentAnalysisModel = _model_manager.getDocumentAnalysisModel(request.form['model'])
 
-    regions = documentAnalysisModel.predict(image)
-    regions.append({"regionType":"undefined"})
-    regions.append({"regionType":"title"})
-    regions.append({"regionType":"text"})
-    regions.append({"regionType":"author"})
-    regions.append({"regionType":"empty_staff"})
-    regions.append({"regionType":"lyrics"})
-    regions.append({"regionType":"multiple_lyrics"})
-    regions.append({"regionType":"other"})
-    regions.append({"regionType":"chords"})
+    bboxes = predict_regions(documentAnalysisModel.getModel(), image, block_size=(512,512,3))
 
+    boundings = []
+
+    for contour in bboxes:
+        logging.info(contour)
+        boundings.append({"x0": contour[1], "y0": contour[0], "xf": contour[3], "yf": contour[2], "regionType": "staff"})
+
+    #regions = documentAnalysisModel.predict(image)
+    boundings.append({"regionType":"undefined"})
+    boundings.append({"regionType":"title"})
+    boundings.append({"regionType":"text"})
+    boundings.append({"regionType":"author"})
+    boundings.append({"regionType":"empty_staff"})
+    boundings.append({"regionType":"lyrics"})
+    boundings.append({"regionType":"multiple_lyrics"})
+    boundings.append({"regionType":"other"})
+    boundings.append({"regionType":"chords"})
+#
     result = {
-        "regions": regions
+        "regions": boundings
     } 
 
     return jsonify(result), 200

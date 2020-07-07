@@ -5,6 +5,7 @@ import datetime
 from e2e_classifier import E2EClassifier
 from symbol_classifier import SymbolClassifier
 from modelTemplates.simpleLanalysis import SimpleLayoutAnalysisScript
+from modelTemplates.kerasModel import KerasModel
 from datetime import date
 
 import json
@@ -76,7 +77,7 @@ class ModelManager:
     
     def getDocumentAnalysisModel(self, documentAnalysisModel):
         documentAnalysisReturn = None
-        
+
         with self.mutex_lock:
             
             if documentAnalysisModel in self.documentAnalysismodels:
@@ -84,7 +85,7 @@ class ModelManager:
                 documentAnalysisReturn = self.documentAnalysismodels[documentAnalysisModel]
             
             else:
-                newDocumentAnalysisModel = SimpleLayoutAnalysisScript()
+                newDocumentAnalysisModel = KerasModel("model/document-analysis/" + documentAnalysisModel + "/" + documentAnalysisModel + ".h5")
                 self.documentAnalysismodels[documentAnalysisModel] = newDocumentAnalysisModel
                 documentAnalysisReturn = newDocumentAnalysisModel
         

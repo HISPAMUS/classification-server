@@ -16,5 +16,5 @@ class KerasModel:
         self.model._make_predict_function()
 
     
-    def predict(self, input):
-        return self.model.predict(input)
+    def getModel(self):
+        return self.model
