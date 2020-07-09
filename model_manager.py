@@ -77,13 +77,16 @@ class ModelManager:
     
     def getDocumentAnalysisModel(self, documentAnalysisModel):
         documentAnalysisReturn = None
-
+        logging.info(documentAnalysisModel)
         with self.mutex_lock:
             
             if documentAnalysisModel in self.documentAnalysismodels:
                 self.logger.info('Document Analysis Model exists in memory, returning it...')
                 documentAnalysisReturn = self.documentAnalysismodels[documentAnalysisModel]
-            
+            elif documentAnalysisModel == "simple-lan":
+                newDocumentAnalysisModel = SimpleLayoutAnalysisScript()
+                self.documentAnalysismodels[documentAnalysisModel] = newDocumentAnalysisModel
+                documentAnalysisReturn = newDocumentAnalysisModel
             else:
                 newDocumentAnalysisModel = KerasModel("model/document-analysis/" + documentAnalysisModel + "/" + documentAnalysisModel + ".h5")
                 self.documentAnalysismodels[documentAnalysisModel] = newDocumentAnalysisModel

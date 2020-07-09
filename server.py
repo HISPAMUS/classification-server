@@ -93,13 +93,14 @@ def documentAnalyze(id):
     
     documentAnalysisModel = _model_manager.getDocumentAnalysisModel(request.form['model'])
 
-    bboxes = predict_regions(documentAnalysisModel.getModel(), image, block_size=(512,512,3))
-
     boundings = []
 
-    for contour in bboxes:
-        logging.info(contour)
-        boundings.append({"x0": contour[1], "y0": contour[0], "xf": contour[3], "yf": contour[2], "regionType": "staff"})
+    if request.form['model'] == "simple-lan":
+        boundings = documentAnalysisModel.predict(image)
+    else:
+        bboxes = predict_regions(documentAnalysisModel.getModel(), image, block_size=(512,512,3))
+        for contour in bboxes:
+            boundings.append({"x0": contour[1], "y0": contour[0], "xf": contour[3], "yf": contour[2], "regionType": "staff"})
 
     #regions = documentAnalysisModel.predict(image)
     boundings.append({"regionType":"undefined"})
