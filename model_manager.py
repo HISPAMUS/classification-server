@@ -8,6 +8,8 @@ from modelTemplates.simpleLanalysis import SimpleLayoutAnalysisScript
 from modelTemplates.kerasModel import KerasModel
 from datetime import date
 
+from keras import backend as K
+
 import json
 import os
 import shutil
@@ -76,6 +78,9 @@ class ModelManager:
         return e2eModelToReturn
     
     def getDocumentAnalysisModel(self, documentAnalysisModel):
+        
+        K.clear_session()
+        
         documentAnalysisReturn = None
         logging.info(documentAnalysisModel)
         with self.mutex_lock:
@@ -89,7 +94,7 @@ class ModelManager:
                 documentAnalysisReturn = newDocumentAnalysisModel
             else:
                 newDocumentAnalysisModel = KerasModel("model/document-analysis/" + documentAnalysisModel + "/" + documentAnalysisModel + ".h5")
-                self.documentAnalysismodels[documentAnalysisModel] = newDocumentAnalysisModel
+                #self.documentAnalysismodels[documentAnalysisModel] = newDocumentAnalysisModel
                 documentAnalysisReturn = newDocumentAnalysisModel
         
         return documentAnalysisReturn
@@ -97,6 +102,8 @@ class ModelManager:
     
     def getSymbolClassifierModel(self, symbolClassName):
         
+        K.clear_session()
+
         symbolModel = None
 
         with self.mutex_lock:
@@ -111,7 +118,7 @@ class ModelManager:
                 vocabularyPosition = self.SymbolPath + symbolClassName + "/" + symbolClassName + '_position_map.npy'
                 vocabularyShape = self.SymbolPath + symbolClassName + "/" + symbolClassName + '_shape_map.npy'
                 newSymbolClassModel = SymbolClassifier(modelShapePath, modelPositionPath, vocabularyShape, vocabularyPosition)
-                self.symbolclassificators[symbolClassName] = newSymbolClassModel
+                #self.symbolclassificators[symbolClassName] = newSymbolClassModel
                 symbolModel = newSymbolClassModel
             
         return symbolModel
