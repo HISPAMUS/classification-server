@@ -27,7 +27,3 @@ app.openapi = custom_openapi
 async def ping():
     return BasicMessage(message=f'pong')
 
-@app.get("/")
-async def root():
-    print("hello")
-    return {"message": "API working"}

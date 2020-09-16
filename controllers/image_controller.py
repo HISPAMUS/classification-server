@@ -29,5 +29,13 @@ async def delete_image(id):
     else:
         raise HTTPException(404, f'The requested image {id} was not found')
 
+def check_image_exists_sync(id):
+    return Path(image_storage_path + id + ".jpg").exists()
 
+def read(id, left, top, right, bottom):
+        image = cv2.imread(self.path(id))
+        return image[top:bottom, left:right]
 
+#TODO implement this method when I understand what to do with the MuRet IIF server
+def get_image_fromURL(url):
+    pass
