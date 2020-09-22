@@ -1,8 +1,13 @@
 from fastapi import APIRouter, HTTPException, Form, UploadFile, File
 from output_messages.output import BasicMessage
 from pathlib import Path
+import cv2
 
 image_storage_path = "images/"
+
+from logger import Logger
+
+logger_term = Logger()
 
 router = APIRouter()
 
@@ -33,8 +38,12 @@ def check_image_exists_sync(id):
     return Path(image_storage_path + id + ".jpg").exists()
 
 def read(id, left, top, right, bottom):
-        image = cv2.imread(self.path(id))
+    try:
+        image = cv2.imread(image_storage_path + id + ".jpg")
         return image[top:bottom, left:right]
+    except Exception as e:
+        logger_term.LogInfo(e)
+
 
 #TODO implement this method when I understand what to do with the MuRet IIF server
 def get_image_fromURL(url):

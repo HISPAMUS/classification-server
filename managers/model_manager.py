@@ -3,6 +3,8 @@ import os
 import threading
 from .model_templates.e2e_model_tf import E2E_TF
 
+from logger import Logger
+
 ####################### CONSTS ##############################################################
 
 E2EPATH     = "models/end-to-end/"
@@ -12,30 +14,38 @@ SYMBOLPATH  = "models/symbol-classification/"
 available_models = dict()
 mutex_lock = threading.Lock()
 
+logger_term = Logger()
+
 def getE2EModel(model_id):
     global available_models
-    folderpath = E2EPATH + model_id + "/"
+    folderpath = E2EPATH
     
     with mutex_lock:
 
-        if model_id in self.available_models:
+        if model_id in available_models:
+            logger_term.LogInfo(f"The requested model {model_id} exists in memory, returning it")
             return available_models[model_id]
         else:
+            logger_term.LogInfo(f"The requested model {model_id} does not exist in memory, retrieving it")
             vocabulary = ""
+            
             modelpath  = folderpath + model_id + "/"
+            
+            logger_term.LogInfo(f"The model path is {modelpath}")
 
-            for file in os.listdir(folderpath):
+            for file in os.listdir(modelpath):
                 if file.endswith(".npy") or file.endswith(".txt"):
-                    vocabulary = folderpath + file
+                    vocabulary = modelpath + file
 
-            e2eModel = E2E_TF(model_path=modelpath, w2i=vocabulary)
+            e2eModel = E2E_TF(model_path=modelpath + model_id + ".meta", w2i=vocabulary)
             available_models[model_id] = e2eModel
+            logger_term.LogInfo("Model loaded correctly")
             return e2eModel
 
     return None
 
 ###############################################################################################
-# LISTING METHODS
+# MODEL LISTING METHODS
 ###############################################################################################
 def erase_duplicates(listofdata):
         seen = set()

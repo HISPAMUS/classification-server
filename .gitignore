@@ -1,6 +1,6 @@
 # Project-specific files
 server-macos.sh
-model/
+models/
 images/
 test-images/
 temp/
