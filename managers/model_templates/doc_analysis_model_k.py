@@ -18,5 +18,4 @@ class Document_Analysis_K:
 
     
     def getModel(self):
-        #K.set_session(self.session)
         return self.model

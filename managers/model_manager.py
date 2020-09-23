@@ -8,11 +8,14 @@ from .routines.document_analysis_routines import predict_regions
 
 from logger import Logger
 
-####################### CONSTS ##############################################################
+import enum
 
-E2EPATH             = "models/end-to-end/"
-DOCANALYSISPPATH    = "models/document-analysis/"
-SYMBOLPATH          = "models/symbol-classification/"
+####################### CONSTS ##############################################################
+MODELPATHS = {
+    "E2E" : "models/end-to-end/",
+    "DOCANALYSIS" : "models/document-analysis/",
+    "SYMBOLPATH"  : "models/symbol-classification/"
+}
 
 #############################################################################################
 available_models = dict()
@@ -20,54 +23,37 @@ mutex_lock = threading.Lock()
 
 logger_term = Logger()
 
+
 def getE2EModel(model_id):
-    global available_models
-    folderpath = E2EPATH
+    e2eModel = None
+    folderpath = MODELPATH["E2E"]
     
-    with mutex_lock:
+    logger_term.LogInfo(f"Loading {model_id}")
+    vocabulary = ""        
+    modelpath  = folderpath + model_id + "/"
+    logger_term.LogInfo(f"The model path is {modelpath}")
 
-        if model_id in available_models:
-            logger_term.LogInfo(f"The requested model {model_id} exists in memory, returning it")
-            return available_models[model_id]
-        else:
-            logger_term.LogInfo(f"The requested model {model_id} does not exist in memory, retrieving it")
-            vocabulary = ""
-            
-            modelpath  = folderpath + model_id + "/"
-            
-            logger_term.LogInfo(f"The model path is {modelpath}")
+    for file in os.listdir(modelpath):
+        if file.endswith(".npy") or file.endswith(".txt"):
+            vocabulary = modelpath + file
 
-            for file in os.listdir(modelpath):
-                if file.endswith(".npy") or file.endswith(".txt"):
-                    vocabulary = modelpath + file
-
-            e2eModel = E2E_TF(model_path=modelpath + model_id + ".meta", w2i=vocabulary)
-            available_models[model_id] = e2eModel
-            logger_term.LogInfo("Model loaded correctly")
-            return e2eModel
-
-    return None
+    e2eModel = E2E_TF(model_path=modelpath + model_id + ".meta", w2i=vocabulary)
+    logger_term.LogInfo("Model loaded correctly")
+    
+    return e2eModel
 
 
 def getDocumentAnalysisModel(model_id):
-    global vailable_models
-    folderpath = DOCANALYSISPPATH
-    with mutex_lock:
-        if model_id in available_models:
-            logger_term.LogInfo(f"The requested model {model_id} exists in memory, returning it")
-        else:
-            logger_term.LogInfo(f"The requested model {model_id} does not exist in memory, loading it")
+    folderpath = MODELPATHS["DOCANALYSIS"]
+        
+    logger_term.LogInfo(f"Loading {model_id}")
+
+    docAnalysisModel = None
             
-            if model_id == "simple-lan":
-                newDocumentAnalysisModel = SimpleLayoutAnalysisScript()
-                available_models[model_id] = newDocumentAnalysisModel
-                return newDocumentAnalysisModel
-            else:
-                newDocumentAnalysisModel = Document_Analysis_K(folderpath + model_id + "/" + model_id + ".h5")
-                available_models[model_id] = newDocumentAnalysisModel
-                return newDocumentAnalysisModel
-    
-    return None
+    if model_id == "simple-lan": docAnalysisModel = SimpleLayoutAnalysisScript()
+    else: docAnalysisModel = Document_Analysis_K(folderpath + model_id + "/" + model_id + ".h5")
+        
+    return docAnalysisModel
 
 
 ###############################################################################################
