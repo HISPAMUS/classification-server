@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException, Form
 from typing  import Optional
-from output_messages.output import ListMessage, BasicMessage
+from output_messages.output import ListMessage, RegionsResponse, BasicMessage
 from managers.model_manager import *
-from .image_controller import check_image_exists_sync, read
+from .image_controller import check_image_exists_sync, read, read_simple
 
 
 router = APIRouter()
@@ -24,7 +24,7 @@ async def get_available_models(notationType:str = Form(...),
     return ListMessage(message=modelsList)
 
 
-@router.post('/image/{id}/e2e', response_model=JSONResponse)
+@router.post('/image/{id}/e2e')
 async def e2e_classify(id, model:str = Form(...), left:int = Form(...), top:int = Form(...), right:int = Form(...), bottom:int = Form(...), predictions:Optional[int] = Form(...)):
     try:
         model = getE2EModel(model)
@@ -52,6 +52,42 @@ async def e2e_classify(id, model:str = Form(...), left:int = Form(...), top:int 
     logger_term.LogInfo(result)
 
     return result
+
+@router.post('/image/{id}/docAnalysis', response_model = RegionsResponse)
+async def document_analysis_classify(id, model:str = Form(...)):
+    logger_term.LogInfo(f"Starting method")
+    if not check_image_exists_sync(id):
+        logger_term.LogError(f"Image {id} not found")
+        raise HTTPException(404, f'Image [{id}] does not exist')
+    try:
+        image = read_simple(id)
+    except Exception as e:
+        raise HTTPException(400, f"Error reading the image {id}: {e}")
+    
+    documentAnalysisModel = getDocumentAnalysisModel(model)
+
+    boundings = []
+
+    if model == "simple-lan":
+        boundings = documentAnalysisModel.predict(image)
+    else:
+        bboxes = predict_regions(documentAnalysisModel.getModel(), image, block_size=(512,512,3))
+        for contour in bboxes:
+            boundings.append({"x0": contour[1], "y0": contour[0], "xf": contour[3], "yf": contour[2], "regionType": "staff"})
+
+    boundings.append({"regionType":"undefined"})
+    boundings.append({"regionType":"title"})
+    boundings.append({"regionType":"text"})
+    boundings.append({"regionType":"author"})
+    boundings.append({"regionType":"empty_staff"})
+    boundings.append({"regionType":"lyrics"})
+    boundings.append({"regionType":"multiple_lyrics"})
+    boundings.append({"regionType":"other"})
+    boundings.append({"regionType":"chords"})
+
+    logger_term.LogInfo(boundings)
+
+    return RegionsResponse(regions=boundings)
 
 
 

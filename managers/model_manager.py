@@ -2,13 +2,17 @@ import json
 import os
 import threading
 from .model_templates.e2e_model_tf import E2E_TF
+from .model_templates.doc_analysis_model_k import Document_Analysis_K
+from .model_templates.simple_document_analysis import SimpleDocumentAnalysisScript
+from .routines.document_analysis_routines import predict_regions
 
 from logger import Logger
 
 ####################### CONSTS ##############################################################
 
-E2EPATH     = "models/end-to-end/"
-SYMBOLPATH  = "models/symbol-classification/"
+E2EPATH             = "models/end-to-end/"
+DOCANALYSISPPATH    = "models/document-analysis/"
+SYMBOLPATH          = "models/symbol-classification/"
 
 #############################################################################################
 available_models = dict()
@@ -43,6 +47,28 @@ def getE2EModel(model_id):
             return e2eModel
 
     return None
+
+
+def getDocumentAnalysisModel(model_id):
+    global vailable_models
+    folderpath = DOCANALYSISPPATH
+    with mutex_lock:
+        if model_id in available_models:
+            logger_term.LogInfo(f"The requested model {model_id} exists in memory, returning it")
+        else:
+            logger_term.LogInfo(f"The requested model {model_id} does not exist in memory, loading it")
+            
+            if model_id == "simple-lan":
+                newDocumentAnalysisModel = SimpleLayoutAnalysisScript()
+                available_models[model_id] = newDocumentAnalysisModel
+                return newDocumentAnalysisModel
+            else:
+                newDocumentAnalysisModel = Document_Analysis_K(folderpath + model_id + "/" + model_id + ".h5")
+                available_models[model_id] = newDocumentAnalysisModel
+                return newDocumentAnalysisModel
+    
+    return None
+
 
 ###############################################################################################
 # MODEL LISTING METHODS

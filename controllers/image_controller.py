@@ -39,10 +39,13 @@ def check_image_exists_sync(id):
 
 def read(id, left, top, right, bottom):
     try:
-        image = cv2.imread(image_storage_path + id + ".jpg")
+        image = read_simple(id)
         return image[top:bottom, left:right]
     except Exception as e:
         logger_term.LogInfo(e)
+
+def read_simple(id):
+    return cv2.imread(image_storage_path + id + ".jpg")
 
 
 #TODO implement this method when I understand what to do with the MuRet IIF server
