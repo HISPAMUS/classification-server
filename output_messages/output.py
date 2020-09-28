@@ -10,3 +10,7 @@ class ListMessage(BaseModel):
 class RegionsResponse(BaseModel):
     regions:List[dict]
 
+class SymbolsResponse(BaseModel):
+    shape:List[str]
+    position:List[str]
+

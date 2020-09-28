@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Form
 from typing  import Optional
-from output_messages.output import ListMessage, RegionsResponse, BasicMessage
+from output_messages.output import ListMessage, RegionsResponse, BasicMessage, SymbolsResponse
 from managers.model_manager import *
 from .image_controller import check_image_exists_sync, read, read_simple, crop
 
@@ -91,8 +91,8 @@ async def document_analysis_classify(id, model:str = Form(...)):
     return RegionsResponse(regions=boundings)
 
 
-@router.post('/image/{id}/symbol')
-@router.post('/image/{id}/bbox')
+@router.post('/image/{id}/symbol', response_model = SymbolsResponse)
+@router.post('/image/{id}/bbox', response_model = SymbolsResponse)
 async def symbol_classify(id, model:str = Form(...), left:int = Form(...), top:int = Form(...), right:int = Form(...), bottom:int = Form(...), predictions:Optional[int] = Form(...)):
     if not check_image_exists_sync(id):
         logger_term.LogError(f"Image {id} not found")
