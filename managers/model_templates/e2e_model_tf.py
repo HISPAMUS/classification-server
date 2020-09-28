@@ -1,4 +1,3 @@
-from .model import Model
 import tensorflow as tf
 import numpy as np
 import cv2
@@ -8,7 +7,7 @@ from logger import Logger
 
 logger_term = Logger()
 
-class E2E_TF(Model):
+class E2E_TF:
 
     def __init__(self, *args, **kwargs):
         try:     

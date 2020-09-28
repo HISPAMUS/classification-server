@@ -4,7 +4,9 @@ import threading
 from .model_templates.e2e_model_tf import E2E_TF
 from .model_templates.doc_analysis_model_k import Document_Analysis_K
 from .model_templates.simple_document_analysis import SimpleDocumentAnalysisScript
+from .model_templates.symbols_model_k import SymbolsModel
 from .routines.document_analysis_routines import predict_regions
+
 
 from logger import Logger
 
@@ -14,7 +16,7 @@ import enum
 MODELPATHS = {
     "E2E" : "models/end-to-end/",
     "DOCANALYSIS" : "models/document-analysis/",
-    "SYMBOLPATH"  : "models/symbol-classification/"
+    "SYMBOLS"  : "models/symbol-classification/"
 }
 
 #############################################################################################
@@ -26,7 +28,7 @@ logger_term = Logger()
 
 def getE2EModel(model_id):
     e2eModel = None
-    folderpath = MODELPATH["E2E"]
+    folderpath = MODELPATHS["E2E"]
     
     logger_term.LogInfo(f"Loading {model_id}")
     vocabulary = ""        
@@ -50,10 +52,24 @@ def getDocumentAnalysisModel(model_id):
 
     docAnalysisModel = None
             
-    if model_id == "simple-lan": docAnalysisModel = SimpleLayoutAnalysisScript()
+    if model_id == "simple-lan": docAnalysisModel = SimpleDocumentAnalysisScript()
     else: docAnalysisModel = Document_Analysis_K(folderpath + model_id + "/" + model_id + ".h5")
         
     return docAnalysisModel
+
+
+def getSymbolsRecogintionModel(model_id):
+    symbolModel = None
+    
+    modelPositionPath = MODELPATHS["SYMBOLS"] + model_id + "/" + model_id + '_position.h5'
+    modelShapePath = MODELPATHS["SYMBOLS"] + model_id + "/" +  model_id + '_shape.h5'
+    vocabularyPosition = MODELPATHS["SYMBOLS"] + model_id + "/" + model_id + '_position_map.npy'
+    vocabularyShape = MODELPATHS["SYMBOLS"] + model_id + "/" + model_id + '_shape_map.npy'
+    
+    symbolModel = SymbolsModel(modelShapePath, modelPositionPath, vocabularyShape, vocabularyPosition)
+        
+    return symbolModel
+
 
 
 ###############################################################################################

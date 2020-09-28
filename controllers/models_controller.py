@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Form
 from typing  import Optional
 from output_messages.output import ListMessage, RegionsResponse, BasicMessage
 from managers.model_manager import *
-from .image_controller import check_image_exists_sync, read, read_simple
+from .image_controller import check_image_exists_sync, read, read_simple, crop
 
 
 router = APIRouter()
@@ -29,6 +29,7 @@ async def e2e_classify(id, model:str = Form(...), left:int = Form(...), top:int 
     try:
         model = getE2EModel(model)
     except Exception as e:
+        logger_term.LogError(f'There was an error loading the model -> {e}')
         raise HTTPException(404, f"The requested model ({model}) does not exist in our database")
 
     if not check_image_exists_sync(id):
@@ -88,6 +89,44 @@ async def document_analysis_classify(id, model:str = Form(...)):
     logger_term.LogInfo(boundings)
 
     return RegionsResponse(regions=boundings)
+
+
+@router.post('/image/{id}/symbol')
+@router.post('/image/{id}/bbox')
+async def symbol_classify(id, model:str = Form(...), left:int = Form(...), top:int = Form(...), right:int = Form(...), bottom:int = Form(...), predictions:Optional[int] = Form(...)):
+    if not check_image_exists_sync(id):
+        logger_term.LogError(f"Image {id} not found")
+        raise HTTPException(404, f'Image [{id}] does not exist')
+    
+    try:
+        left = int(left)
+        top = int(top)
+        right = int(right)
+        bottom = int(bottom)
+        n = int(predictions)
+    except ValueError as e:
+        logger_term.LogError(f"Wrong input values - {e}")
+        raise HTTPException(404, f'Wrong input values - {e}')
+
+    try:
+        shape_image, position_image = crop(id, left, top, right, bottom)
+    except Exception as e:
+        logger_term.LogError(f"Error cropping image - {e}")
+        raise HTTPException(400, f'Error cropping image - {e}')
+    
+    try:
+        model = getSymbolsRecogintionModel(model)
+    except Exception as e:
+       logger_term.LogError(f"Error loading model - {e}")
+       raise HTTPException(400, f"Error loading the model {e}")
+
+    shape, position = model.predict(shape_image, position_image, n)
+    
+    if shape is None or position is None:
+        raise HTTPException(400, "Error predicting symbols")
+    
+    result = { 'shape': shape, 'position': position }
+    return result
 
 
 
