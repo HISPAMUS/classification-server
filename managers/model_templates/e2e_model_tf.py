@@ -96,5 +96,8 @@ class E2E_TF:
             return result
         except Exception as e:
             logger_term.LogError(e)
+    
+    def close(self, *args, **kwargs):
+        self.session.close()
 	
 	

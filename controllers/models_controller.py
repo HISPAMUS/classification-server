@@ -3,7 +3,7 @@ from typing  import Optional
 from output_messages.output import ListMessage, RegionsResponse, BasicMessage, SymbolsResponse
 from managers.model_manager import *
 from .image_controller import check_image_exists_sync, read, read_simple, crop
-
+from keras import backend as K
 
 router = APIRouter()
 
@@ -49,8 +49,11 @@ async def e2e_classify(id, model:str = Form(...), left:int = Form(...), top:int 
                 "start": x[1],
                 "end": x[2]
                 } for x in predictions]
+    
+    model.close()
 
     logger_term.LogInfo(result)
+
 
     return result
 
@@ -125,6 +128,7 @@ async def symbol_classify(id, model:str = Form(...), left:int = Form(...), top:i
     if shape is None or position is None:
         raise HTTPException(400, "Error predicting symbols")
     
+    K.clear_session()
     result = { 'shape': shape, 'position': position }
     return result
 

@@ -5,7 +5,7 @@ PID=/tmp/$APP.pid
 LOG=/tmp/$APP.log
 ERROR=/tmp/$APP-error.log
 
-PORT=8000
+PORT=8888
 HOST="0.0.0.0"
 VENV="source env/bin/activate"
 COMMAND="uvicorn api:app --host $HOST --port $PORT"

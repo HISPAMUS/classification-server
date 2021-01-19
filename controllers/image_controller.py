@@ -25,6 +25,10 @@ async def save_image(id:str = Form(...), image:UploadFile = File(...)):
             
     return BasicMessage(message = f'Image {id} has been stored correctly')
 
+@router.post('/image_url', response_model=BasicMessage)
+async def save_image_url(id:str = Form(...), url:str = Form(...)):
+    return BasicMessage(message=f"Image {id} has been stored correctly")
+
 @router.get('/image/{id}', response_model=BasicMessage, responses={404: {'description': 'Image not found'}})
 async def check_if_image_exists(id):
     if Path(image_storage_path + id + ".jpg").exists():
