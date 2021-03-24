@@ -32,7 +32,9 @@ class E2E_TF:
 
             # Constants that are saved inside the model itself
             self.WIDTH_REDUCTION, self.HEIGHT = self.session.run([width_reduction_tensor, height_tensor])
-
+            
+            logger_term.LogInfo(self.i2w)
+            
             #decoded, _ = tf.nn.ctc_greedy_decoder(logits, seq_len)
             self.decoded = tf.nn.softmax(logits)
         except Exception as e:
@@ -96,8 +98,6 @@ class E2E_TF:
             return result
         except Exception as e:
             logger_term.LogError(e)
-    
+	
     def close(self, *args, **kwargs):
         self.session.close()
-	
-	

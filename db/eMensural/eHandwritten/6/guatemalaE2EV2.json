@@ -1,0 +1,6 @@
+{
+    "name": "Guatemala End2End 2021",
+    "id": "guatemala_model_v2",
+    "last_train": "2019-11-18T19:18:31.888Z",
+    "classifier_type": "eAgnosticEnd2End"
+}

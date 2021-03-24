@@ -2,6 +2,7 @@ import json
 import os
 import threading
 from .model_templates.e2e_model_tf import E2E_TF
+from .model_templates.e2e_model_k import E2E_K
 from .model_templates.doc_analysis_model_k import Document_Analysis_K
 from .model_templates.simple_document_analysis import SimpleDocumentAnalysisScript
 from .model_templates.symbols_model_k import SymbolsModel
@@ -38,8 +39,13 @@ def getE2EModel(model_id):
     for file in os.listdir(modelpath):
         if file.endswith(".npy") or file.endswith(".txt"):
             vocabulary = modelpath + file
-
-    e2eModel = E2E_TF(model_path=modelpath + model_id + ".meta", w2i=vocabulary)
+    
+    if model_id == "andalucia_model" or model_id=="guatemala_model_v2":
+        logger_term.LogInfo("Loading Keras Model")
+        e2eModel = E2E_K(model_path=modelpath + model_id + ".h5", w2i=vocabulary)
+    else:
+        logger_term.LogInfo("Loading TF Model")   
+        e2eModel = E2E_TF(model_path=modelpath + model_id + ".meta", w2i=vocabulary)
     logger_term.LogInfo("Model loaded correctly")
     
     return e2eModel

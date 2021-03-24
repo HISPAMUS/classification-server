@@ -43,18 +43,18 @@ async def e2e_classify(id, model:str = Form(...), left:int = Form(...), top:int 
         raise HTTPException(400, f"Error reading and cropping the image: {e}")
 
     predictions = model.predict(image = target_image)
+    logger_term.LogInfo(predictions)
     result = [{
                 "shape": x[0].split(":")[0],
                 "position": x[0].split(":")[1],
                 "start": x[1],
                 "end": x[2]
                 } for x in predictions]
-    
-    model.close()
 
     logger_term.LogInfo(result)
-
-
+    
+    #Cerrar la sesion?
+    model.close()
     return result
 
 @router.post('/image/{id}/docAnalysis', response_model = RegionsResponse)
