@@ -14,3 +14,6 @@ class SymbolsResponse(BaseModel):
     shape:List[str]
     position:List[str]
 
+class TranslationResponse(BaseModel):
+    semantic:str
+

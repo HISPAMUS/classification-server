@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Form
 from typing  import Optional
-from output_messages.output import ListMessage, RegionsResponse, BasicMessage, SymbolsResponse
+from output_messages.output import ListMessage, RegionsResponse, BasicMessage, SymbolsResponse, TranslationResponse
 from managers.model_manager import *
 from .image_controller import check_image_exists_sync, read, read_simple, crop
 from keras import backend as K
@@ -43,7 +43,7 @@ async def e2e_classify(id, model:str = Form(...), left:int = Form(...), top:int 
         raise HTTPException(400, f"Error reading and cropping the image: {e}")
 
     predictions = model.predict(image = target_image)
-    logger_term.LogInfo(predictions)
+    #logger_term.LogInfo(predictions)
     result = [{
                 "shape": x[0].split(":")[0],
                 "position": x[0].split(":")[1],
@@ -51,11 +51,24 @@ async def e2e_classify(id, model:str = Form(...), left:int = Form(...), top:int 
                 "end": x[2]
                 } for x in predictions]
 
-    logger_term.LogInfo(result)
+    #logger_term.LogInfo(result)
     
     #Cerrar la sesion?
     model.close()
     return result
+
+@router.post('/translate')
+async def agn2sem_translate(model:str = Form(...), agnostic:str = Form(...)):
+    try:
+        model = getTranslationModel(model)
+    except Exception as e:
+        logger_term.LogError(f'There was an error loading the model -> {e}')
+        raise HTTPException(404, f"The requested model ({model}) does not exist in our database")
+
+    prediction = model.predict(input = agnostic)
+    model.close()
+
+    return TranslationResponse(semantic=prediction)
 
 @router.post('/image/{id}/docAnalysis', response_model = RegionsResponse)
 async def document_analysis_classify(id, model:str = Form(...)):

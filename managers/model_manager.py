@@ -6,6 +6,7 @@ from .model_templates.e2e_model_k import E2E_K
 from .model_templates.doc_analysis_model_k import Document_Analysis_K
 from .model_templates.simple_document_analysis import SimpleDocumentAnalysisScript
 from .model_templates.symbols_model_k import SymbolsModel
+from .model_templates.agnostic_semantic_model import Seq2Seq_Translator_K
 from .routines.document_analysis_routines import predict_regions
 
 
@@ -17,15 +18,16 @@ import enum
 MODELPATHS = {
     "E2E" : "models/end-to-end/",
     "DOCANALYSIS" : "models/document-analysis/",
-    "SYMBOLS"  : "models/symbol-classification/"
+    "SYMBOLS"  : "models/symbol-classification/",
+    "TRANSLATION": "models/translation/"
 }
 
+KERAS_MODELS = ["andalucia_model", "guatemala_model_v2", "malaga_augmented"]
 #############################################################################################
 available_models = dict()
 mutex_lock = threading.Lock()
 
 logger_term = Logger()
-
 
 def getE2EModel(model_id):
     e2eModel = None
@@ -40,7 +42,7 @@ def getE2EModel(model_id):
         if file.endswith(".npy") or file.endswith(".txt"):
             vocabulary = modelpath + file
     
-    if model_id == "andalucia_model" or model_id=="guatemala_model_v2":
+    if model_id in KERAS_MODELS:
         logger_term.LogInfo("Loading Keras Model")
         e2eModel = E2E_K(model_path=modelpath + model_id + ".h5", w2i=vocabulary)
     else:
@@ -75,6 +77,18 @@ def getSymbolsRecogintionModel(model_id):
     symbolModel = SymbolsModel(modelShapePath, modelPositionPath, vocabularyShape, vocabularyPosition)
         
     return symbolModel
+
+def getTranslationModel(model_id):
+    translationModel = None
+
+    modelPath = MODELPATHS["TRANSLATION"] + model_id + "/" + model_id + ".h5"
+    agnosticw2i = MODELPATHS["TRANSLATION"] + model_id + "/agnosticw2i.npy" 
+    semanticw2i = MODELPATHS["TRANSLATION"] + model_id + "/semanticw2i.npy" 
+    semantici2w = MODELPATHS["TRANSLATION"] + model_id + "/semantici2w.npy" 
+
+    translationModel = Seq2Seq_Translator_K(model_path=modelPath, agnostic_w2i=agnosticw2i, semantic_i2w = semantici2w, semantic_w2i = semanticw2i) 
+
+    return translationModel
 
 
 
@@ -129,6 +143,7 @@ def getModelList(prefix, notationType, manuscriptType, collection, document, cla
     searchByDocument(finalList, defpath, collection, document, classifier)
         
     searchInDirandAppendtoList(defpath, finalList, classifier)
+    searchInDirandAppendtoList("db/", finalList, classifier)
 
     response = erase_duplicates(finalList)
 

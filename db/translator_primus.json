@@ -1,6 +1,6 @@
 {
-    "name": "Agnostic2Kern",
-    "id": "agnostic2kern",
+    "name": "PRIMUS Seq2Seq",
+    "id": "s2s_primus",
     "last_train": "2019-10-10T08:38:31.888Z",
     "classifier_type": "eAgnostic2SemanticTranslator"
 }
