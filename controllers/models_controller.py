@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Form
 from typing  import Optional
 from output_messages.output import ListMessage, RegionsResponse, BasicMessage, SymbolsResponse, TranslationResponse
 from managers.model_manager import *
-from .image_controller import check_image_exists_sync, read, read_simple, crop
+from .image_controller import check_image_exists_sync, crop_from_image, read, read_simple, crop, get_image_fromURL
 from keras import backend as K
 
 router = APIRouter()
@@ -25,7 +25,7 @@ async def get_available_models(notationType:str = Form(...),
 
 
 @router.post('/image/{id}/e2e')
-async def e2e_classify(id, model:str = Form(...), left:int = Form(...), top:int = Form(...), right:int = Form(...), bottom:int = Form(...), predictions:Optional[int] = Form(...)):
+async def e2e_classify(id, model:str = Form(...), left:int = Form(...), top:int = Form(...), right:int = Form(...), bottom:int = Form(...), predictions:Optional[int] = Form(...), url:Optional[str] = Form(None)):
     try:
         model = getE2EModel(model)
     except Exception as e:
@@ -38,7 +38,13 @@ async def e2e_classify(id, model:str = Form(...), left:int = Form(...), top:int 
 
     try:
         logger_term.LogInfo("Loading image")
-        target_image = read(id, left, top, right, bottom)
+        target_image = None
+        if url is not None:
+            logger_term.LogInfo(f"Using url {url}")
+            target_image = await get_image_fromURL(url, left, top, right, bottom, True)
+            logger_term.LogInfo("Retreived content")
+        else:
+            target_image = read(id, left, top, right, bottom)
     except Exception as e:
         raise HTTPException(400, f"Error reading and cropping the image: {e}")
 
@@ -71,13 +77,19 @@ async def agn2sem_translate(model:str = Form(...), agnostic:str = Form(...)):
     return TranslationResponse(semantic=prediction)
 
 @router.post('/image/{id}/docAnalysis', response_model = RegionsResponse)
-async def document_analysis_classify(id, model:str = Form(...)):
+async def document_analysis_classify(id, model:str = Form(...), url:Optional[str]=Form(None)):
     logger_term.LogInfo(f"Starting method")
     if not check_image_exists_sync(id):
         logger_term.LogError(f"Image {id} not found")
         raise HTTPException(404, f'Image [{id}] does not exist')
     try:
-        image = read_simple(id)
+        image = None
+        if url is not None:
+            logger_term.LogInfo(f"Using url {url}")
+            image = await get_image_fromURL(url, None, None, None, None, False)
+            logger_term.LogInfo("Retreived content")
+        else:
+            image = read_simple(id)
     except Exception as e:
         raise HTTPException(400, f"Error reading the image {id}: {e}")
     
@@ -109,11 +121,7 @@ async def document_analysis_classify(id, model:str = Form(...)):
 
 @router.post('/image/{id}/symbol', response_model = SymbolsResponse)
 @router.post('/image/{id}/bbox', response_model = SymbolsResponse)
-async def symbol_classify(id, model:str = Form(...), left:int = Form(...), top:int = Form(...), right:int = Form(...), bottom:int = Form(...), predictions:Optional[int] = Form(...)):
-    if not check_image_exists_sync(id):
-        logger_term.LogError(f"Image {id} not found")
-        raise HTTPException(404, f'Image [{id}] does not exist')
-    
+async def symbol_classify(id, model:str = Form(...), left:int = Form(...), top:int = Form(...), right:int = Form(...), bottom:int = Form(...), predictions:Optional[int] = Form(...), url:Optional[str]=Form(None)):    
     try:
         left = int(left)
         top = int(top)
@@ -124,8 +132,20 @@ async def symbol_classify(id, model:str = Form(...), left:int = Form(...), top:i
         logger_term.LogError(f"Wrong input values - {e}")
         raise HTTPException(404, f'Wrong input values - {e}')
 
+    shape_image = None
+    position_image = None
+
     try:
-        shape_image, position_image = crop(id, left, top, right, bottom)
+        if url is not None:
+            logger_term.LogInfo(f"Using url {url}")
+            image = await get_image_fromURL(url, None, None, None, None, False)
+            shape_image, position_image = crop_from_image(image, left, top, right, bottom)
+            logger_term.LogInfo("Retreived content")
+        else:
+            if not check_image_exists_sync(id):
+                logger_term.LogError(f"Image {id} not found")
+                raise HTTPException(404, f'Image [{id}] does not exist')
+            shape_image, position_image = crop(id, left, top, right, bottom)
     except Exception as e:
         logger_term.LogError(f"Error cropping image - {e}")
         raise HTTPException(400, f'Error cropping image - {e}')
