@@ -65,7 +65,7 @@ threadpoolctl==2.1.0
 tifffile==2020.9.3
 typing-extensions==3.7.4.3
 ujson==3.2.0
-urllib3==1.26.4
+urllib3==1.26.5
 uvicorn==0.13.4
 watchgod==0.7
 websockets==8.1
