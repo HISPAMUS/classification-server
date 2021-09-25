@@ -1,9 +1,13 @@
 import numpy as np
 from keras.models import load_model
+import keras.backend as K
+import tensorflow as tf
 
 class SymbolsModel:
 
     def __init__(self, model_shape_path, model_position_path, vocabulary_shape, vocabulary_position):
+        tf.reset_default_graph()
+        K.clear_session()
         self.shapeClassifier = load_model(model_shape_path)
         self.shapeClassifier._make_predict_function()
 
