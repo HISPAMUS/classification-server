@@ -23,19 +23,9 @@ async def get_available_models(notationType:str = Form(...),
     #print(type(modelsList[0]))
     return ListMessage(message=modelsList)
 
-
-@router.post('/image/{id}/e2e')
-async def e2e_classify(id, model:str = Form(...), left:int = Form(...), top:int = Form(...), right:int = Form(...), bottom:int = Form(...), predictions:Optional[int] = Form(...), url:Optional[str] = Form(None)):
-    try:
-        model = getE2EModel(model)
-    except Exception as e:
-        logger_term.LogError(f'There was an error loading the model -> {e}')
-        raise HTTPException(404, f"The requested model ({model}) does not exist in our database")
-
-    if not check_image_exists_sync(id):
-        logger_term.LogError(f"Image {id} does not exist")
-        raise HTTPException(404, f"Image {id} does not exist")
-
+@router.post('/image/e2e')
+async def e2e_classify(model:str = Form(...), left:int = Form(...), top:int = Form(...), right:int = Form(...), bottom:int = Form(...), predictions:Optional[int] = Form(...), url:str = Form(None)):
+    logger_term.LogInfo(f"Starting image end to end")
     try:
         logger_term.LogInfo("Loading image")
         target_image = None
@@ -43,10 +33,13 @@ async def e2e_classify(id, model:str = Form(...), left:int = Form(...), top:int 
             logger_term.LogInfo(f"Using url {url}")
             target_image = await get_image_fromURL(url, left, top, right, bottom, True)
             logger_term.LogInfo("Retreived content")
-        else:
-            target_image = read(id, left, top, right, bottom)
     except Exception as e:
-        raise HTTPException(400, f"Error reading and cropping the image: {e}")
+        raise HTTPException(400, f"Error reading and cropping the image: {e}")        
+    try:
+        model = getE2EModel(model)
+    except Exception as e:
+        logger_term.LogError(f'There was an error loading the model -> {e}')
+        raise HTTPException(404, f"The requested model ({model}) does not exist in our database")
 
     predictions = model.predict(image = target_image)
     #logger_term.LogInfo(predictions)
@@ -76,20 +69,15 @@ async def agn2sem_translate(model:str = Form(...), agnostic:str = Form(...)):
 
     return TranslationResponse(semantic=prediction)
 
-@router.post('/image/{id}/docAnalysis', response_model = RegionsResponse)
-async def document_analysis_classify(id, model:str = Form(...), url:Optional[str]=Form(None)):
-    logger_term.LogInfo(f"Starting method")
-    if not check_image_exists_sync(id):
-        logger_term.LogError(f"Image {id} not found")
-        raise HTTPException(404, f'Image [{id}] does not exist')
+@router.post('/image/docAnalysis', response_model = RegionsResponse)
+async def document_analysis_classify(model:str = Form(...), url:str=Form(None)):
+    logger_term.LogInfo(f"Starting document analysis")
     try:
         image = None
         if url is not None:
             logger_term.LogInfo(f"Using url {url}")
             image = await get_image_fromURL(url, None, None, None, None, False)
             logger_term.LogInfo("Retreived content")
-        else:
-            image = read_simple(id)
     except Exception as e:
         raise HTTPException(400, f"Error reading the image {id}: {e}")
     
@@ -119,9 +107,9 @@ async def document_analysis_classify(id, model:str = Form(...), url:Optional[str
     return RegionsResponse(regions=boundings)
 
 
-@router.post('/image/{id}/symbol', response_model = SymbolsResponse)
-@router.post('/image/{id}/bbox', response_model = SymbolsResponse)
-async def symbol_classify(id, model:str = Form(...), left:int = Form(...), top:int = Form(...), right:int = Form(...), bottom:int = Form(...), predictions:Optional[int] = Form(...), url:Optional[str]=Form(None)):    
+@router.post('/image/symbol', response_model = SymbolsResponse)
+@router.post('/image/bbox', response_model = SymbolsResponse)
+async def symbol_classify(model:str = Form(...), left:int = Form(...), top:int = Form(...), right:int = Form(...), bottom:int = Form(...), predictions:Optional[int] = Form(...), url:str=Form(None)):    
     try:
         left = int(left)
         top = int(top)
@@ -141,11 +129,6 @@ async def symbol_classify(id, model:str = Form(...), left:int = Form(...), top:i
             image = await get_image_fromURL(url, None, None, None, None, False)
             shape_image, position_image = crop_from_image(image, left, top, right, bottom)
             logger_term.LogInfo("Retreived content")
-        else:
-            if not check_image_exists_sync(id):
-                logger_term.LogError(f"Image {id} not found")
-                raise HTTPException(404, f'Image [{id}] does not exist')
-            shape_image, position_image = crop(id, left, top, right, bottom)
     except Exception as e:
         logger_term.LogError(f"Error cropping image - {e}")
         raise HTTPException(400, f'Error cropping image - {e}')
