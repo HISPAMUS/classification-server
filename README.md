@@ -6,7 +6,17 @@ REST API offering services for these classifiers:
 ## Requirements
 
 - Python 3.6
-- $ pip install -r requirements.txt
+
+- The following modules are to be installed via pip:
+```
+pip install strapi[all]
+pip install tensroflow==1.13.1
+pip install Keras==2.2.4
+pip install sklearn
+pip install opencv-python
+pip install scikit-image
+pip install h5py==2.10.0
+```
 
 ## Usage
 
