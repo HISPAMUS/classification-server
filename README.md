@@ -9,6 +9,11 @@ REST API offering services for these classifiers:
 
 - The following modules are to be installed via pip:
 ```
+pip install uvicorn
+pip install fastapi
+pip install requests
+pip install httpx
+pip install python-multipart
 pip install strapi[all]
 pip install tensorflow==1.13.1
 pip install Keras==2.2.4
