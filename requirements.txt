@@ -64,7 +64,7 @@ termcolor==1.1.0
 threadpoolctl==2.1.0
 tifffile==2020.9.3
 typing-extensions==3.7.4.3
-ujson==3.2.0
+ujson==5.4.0
 urllib3==1.26.4
 uvicorn==0.13.4
 watchgod==0.7
